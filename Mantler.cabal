@@ -1,0 +1,38 @@
+cabal-version: 1.12
+
+-- This file has been generated from package.yaml by hpack version 0.33.0.
+--
+-- see: https://github.com/sol/hpack
+--
+-- hash: fff21d44c0f0892cea0dd505140c00681038b2e09ba5829f663ac28db7638e60
+
+name:           Mantler
+version:        0.0.0.0
+category:       Physics
+homepage:       https://github.com/cbpark/Mantler#readme
+bug-reports:    https://github.com/cbpark/Mantler/issues
+author:         Chan Beom Park
+maintainer:     cbpark@gmail.com
+license:        BSD3
+license-file:   LICENSE
+build-type:     Simple
+
+source-repository head
+  type: git
+  location: https://github.com/cbpark/Mantler
+
+executable mat
+  main-is: mat.hs
+  other-modules:
+      Paths_Mantler
+  hs-source-dirs:
+      src
+  ghc-options: -Wall -O2 -funbox-strict-fields
+  build-depends:
+      base >=4.12.0.0 && <5
+    , bytestring
+    , hep-utilities
+    , pipes
+    , pipes-bytestring
+    , zlib
+  default-language: Haskell2010

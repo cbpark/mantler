@@ -1,0 +1,17 @@
+.#*
+*~
+TAGS
+dist*
+cabal.project.local
+.ghc.environment.*
+result
+stack.yaml.lock
+.stack-work
+*.prof
+*.dat
+*.old
+*.cmnd
+*.gz
+*.lhe
+*.log
+bin
