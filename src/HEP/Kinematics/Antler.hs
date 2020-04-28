@@ -26,13 +26,12 @@ mkAntler m0 m1 vis =
                                              , _mV2sq = mV2 * mV2
                                              , _v1    = p1
                                              , _v2    = p2
-                                             , _v1v2  = p1 `dot` p2
-                                             }
+                                             , _v1v2  = p1 `dot` p2 }
 
 data Visibles = NE
               | Visibles
-                { _p1 :: FourMomentum
-                , _p2 :: FourMomentum }
+                { _p1 :: !FourMomentum
+                , _p2 :: !FourMomentum }
               deriving Show
 
 visibles :: HasFourMomentum p => [p] -> Visibles
@@ -85,7 +84,7 @@ sAT Antler {..} pRoot =
 
         m6  = Mat22 (Row2 a02 a03) (Row2 a12 a13)
         m6' = Mat22 (Row2 a20 a21) (Row2 a30 a31)
-    in (/ (4 * _M1sq) ** 4) $
+    in (/ (256 * _M1sq ** 4 + 1.0e-10)) $
        det m1 * det m1' - det m2 * det m2'
         + det m3 * det m3' + det m4 * det m4'
         - det m5 * det m5' + det m6 * det m6'
