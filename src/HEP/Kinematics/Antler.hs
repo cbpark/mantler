@@ -4,7 +4,7 @@ module HEP.Kinematics.Antler where
 
 import HEP.Data.Util.Matrix
 
-import HEP.Kinematics
+import HEP.Kinematics       (FourMomentum, HasFourMomentum (..), dot)
 
 data Antler = Antler { _M0sq  :: !Double
                      , _M1sq  :: !Double

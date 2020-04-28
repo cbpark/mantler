@@ -18,6 +18,6 @@ dependencies:
   - hep-utilities
 
 executables:
-  mat:
-    main: mat.hs
+  sigmaATLHEF:
+    main: sigmaATLHEF.hs
     source-dirs: src
