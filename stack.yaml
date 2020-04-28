@@ -1,8 +1,8 @@
-resolver: lts-15.9
+resolver: lts-15.10
 
 packages:
 - .
 
 extra-deps:
 - git: git@github.com:cbpark/hep-utilities.git
-  commit: 2a43fc9888dba93b02b6c79cfb67638271a61be3
+  commit: f9018732c385df4ae26e5a3c94ee351283a3bed9

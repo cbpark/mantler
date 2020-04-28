@@ -3,8 +3,6 @@ module Main where
 import           HEP.Kinematics.Antler
 
 import           HEP.Data.LHEF
-import qualified HEP.Data.LHEF.PipesUtil    as U
--- import           HEP.Kinematics             (FourMomentum)
 
 import           Codec.Compression.GZip     (decompress)
 import qualified Data.ByteString.Lazy.Char8 as B
@@ -18,12 +16,25 @@ main :: IO ()
 main = do
     lheFile <- head <$> getArgs
     events <- decompress <$> B.readFile lheFile
-    -- B.putStrLn events
-    -- runEffect $ getLHEFEvent fromLazy events >-> P.take 3 >-> P.print
     runEffect $ getLHEFEvent fromLazy events
-        >-> P.map snd >-> U.finalStates >-> getBquarks
-        >-> visibles >-> P.map (mkAntler 80.379 173.0)
+        >-> P.map (getSAT 80.379 173.0)
         >-> P.print
 
-getBquarks :: Monad m => Pipe [Particle] [Particle] m ()
-getBquarks = P.map $ filter ((== 5) . abs . idOf)
+getSAT :: Double -> Double -> Event -> Maybe (Double, Double)
+getSAT m0 m1 ps = do
+    (pH, pBs) <- selectP ps
+    let pH' = setXYZT 0 0 0 800
+    at <- mkAntler m0 m1 (visibles pBs)
+    return (sAT at pH, sAT at pH')
+
+selectP :: Event -> Maybe (FourMomentum, [FourMomentum])
+selectP ev = do
+    let topChild = particlesFrom topQuarks (eventEntry ev)
+    if null topChild
+        then Nothing
+        else do let pH = momentumSum $ fourMomentum <$> concat topChild
+                    pB = fourMomentum <$> concat (filter isBquark <$> topChild)
+                return (pH, pB)
+  where
+    topQuarks = ParticleType [6]
+    isBquark = (== 5) . abs . idOf
