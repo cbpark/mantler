@@ -1,4 +1,4 @@
-module HEP.Data.Analysis.Matrix where
+module HEP.Data.Util.Matrix where
 
 newtype FElem = FElem { evalF :: Double -> Double }
 
