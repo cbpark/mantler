@@ -22,7 +22,7 @@ main = do
         >-> P.print
 
 pH' :: FourMomentum
-pH' = setXYZT 0 0 0 800
+pH' = setXYZT 0 0 0 (1 * 800)
 
 getSAT :: Double -> Double -> Event -> Maybe (Double, Double)
 getSAT m0 m1 ps = do
@@ -42,21 +42,21 @@ selectP ev = do
     topQuarks = ParticleType [6]
     isBquark = (== 5) . abs . idOf
 
--- getSAT' :: Double -> Double -> Event -> Maybe (Double, Double)
--- getSAT' m0 m1 ps = do
---     (pH, pBs) <- selectP' ps
---     at <- mkAntler m0 m1 (visibles pBs)
---     return (sAT at pH, sAT at pH')
+getSAT' :: Double -> Double -> Event -> Maybe (Double, Double)
+getSAT' m0 m1 ps = do
+    (pH, pBs) <- selectP' ps
+    at <- mkAntler m0 m1 (visibles pBs)
+    return (sAT at pH, sAT at pH')
 
--- selectP' :: Event -> Maybe (FourMomentum, [FourMomentum])
--- selectP' ev = do
---     let topChild = particlesFrom topQuarks (eventEntry ev)
---     if null topChild
---         then Nothing
---         else do let pH = momentumSum $ fourMomentum <$> concat topChild
---                     pV = momentumSum . fmap fourMomentum <$>
---                         (filter (not . isNeutrino) <$> topChild)
---                 return (pH, pV)
---   where
---     topQuarks = ParticleType [6]
---     isNeutrino = (`elem` neutrinos) . idOf
+selectP' :: Event -> Maybe (FourMomentum, [FourMomentum])
+selectP' ev = do
+    let topChild = particlesFrom topQuarks (eventEntry ev)
+    if null topChild
+        then Nothing
+        else do let pH = momentumSum $ fourMomentum <$> concat topChild
+                    pV = momentumSum . fmap fourMomentum <$>
+                        (filter (not . isNeutrino) <$> topChild)
+                return (pH, pV)
+  where
+    topQuarks = ParticleType [6]
+    isNeutrino = (`elem` neutrinos) . idOf

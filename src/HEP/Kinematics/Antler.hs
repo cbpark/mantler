@@ -62,10 +62,14 @@ sAT Antler {..} pRoot =
         a22 = 2 * _mV2sq
         a23 = 2 * qp2
 
-        a30 = a03
-        a31 = a13
-        a32 = a23
-        a33 = 2 * qSq
+        -- a30 = a03
+        -- a31 = a13
+        -- a32 = a23
+        -- a33 = 2 * qSq
+        a30 = a03 / qSq
+        a31 = a13 / qSq
+        a32 = a23 / qSq
+        a33 = 2
 
         m1  = Mat22 (Row2 a00 a01) (Row2 a10 a11)
         m1' = Mat22 (Row2 a22 a23) (Row2 a32 a33)
@@ -84,7 +88,7 @@ sAT Antler {..} pRoot =
 
         m6  = Mat22 (Row2 a02 a03) (Row2 a12 a13)
         m6' = Mat22 (Row2 a20 a21) (Row2 a30 a31)
-    in (/ (256 * _M1sq ** 4 + 1.0e-10)) $
+    in (/ (64 * _M1sq ** 3 + 1.0e-10)) $
        det m1 * det m1' - det m2 * det m2'
         + det m3 * det m3' + det m4 * det m4'
         - det m5 * det m5' + det m6 * det m6'
