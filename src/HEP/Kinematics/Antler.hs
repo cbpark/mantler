@@ -2,12 +2,8 @@
 
 module HEP.Kinematics.Antler where
 
-import HEP.Data.Util.Matrix
-
 import HEP.Kinematics
 import HEP.Kinematics.Vector.LorentzVector (setXYZT)
-
--- import Debug.Trace
 
 data Antler = Antler { _M0sq  :: !Double
                      , _M1sq  :: !Double
@@ -49,10 +45,11 @@ sAT Antler {..} pRoot =
     let qp1 = pRoot `dot` _v1
         qp2 = pRoot `dot` _v2
         qSq = pRoot `dot` pRoot
+        deltaM = _M1sq - _M0sq
 
         a00 = 2 * _M1sq
-        a01 = _M1sq - _M0sq + _mV1sq
-        a02 = - _M1sq + _M0sq + 2 * qp2 - _mV2sq
+        a01 = deltaM + _mV1sq
+        a02 = -deltaM + 2 * qp2 - _mV2sq
         a03 = qSq
 
         a10 = a01
@@ -122,6 +119,13 @@ mAT0 at@Antler{..} = do
                     sol1 = uncurry min sol
                     sol2 = uncurry max sol
                 return (sol1, sol2)
+
+data Row2 e = Row2 e e deriving Show
+
+data Mat22 e = Mat22 (Row2 e) (Row2 e) deriving Show
+
+det :: Num e => Mat22 e -> e
+det (Mat22 (Row2 a b) (Row2 c d)) = a * d - b * c
 
 eps :: Double
 eps = 1.0e-10

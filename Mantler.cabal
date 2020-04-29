@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: fd21715d9eca41be885458575d0fc877eb8a8370cb15abe15d491b8e8ce1beac
+-- hash: b44ae34c1551dcffb94c45ed6a553856964a0a77dd3afb43e2853c07563d0276
 
 name:           Mantler
 version:        0.0.0.0
@@ -21,15 +21,14 @@ source-repository head
   type: git
   location: https://github.com/cbpark/Mantler
 
-executable sigmaATLHEF
-  main-is: sigmaATLHEF.hs
+executable mATLHEF
+  main-is: mATLHEF.hs
   other-modules:
-      HEP.Data.Util.Matrix
       HEP.Kinematics.Antler
       Paths_Mantler
   hs-source-dirs:
       src
-  ghc-options: -Wall -O2 -funbox-strict-fields
+  ghc-options: -Wall -Wcompat -O2 -funbox-strict-fields
   build-depends:
       base >=4.12.0.0 && <5
     , bytestring

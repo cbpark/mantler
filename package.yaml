@@ -7,17 +7,18 @@ license-file: LICENSE
 github:       cbpark/Mantler
 category:     Physics
 
-ghc-options:  -Wall -O2 -funbox-strict-fields
+ghc-options:  -Wall -Wcompat -O2 -funbox-strict-fields
 
 dependencies:
   - base >= 4.12.0.0 && < 5
-  - bytestring
-  - pipes
-  - pipes-bytestring
-  - zlib
   - hep-utilities
 
 executables:
-  sigmaATLHEF:
-    main: sigmaATLHEF.hs
+  mATLHEF:
+    main: mATLHEF.hs
     source-dirs: src
+    dependencies:
+      - bytestring
+      - pipes
+      - pipes-bytestring
+      - zlib
