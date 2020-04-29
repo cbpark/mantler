@@ -1,4 +1,5 @@
-{-# LANGUAGE RecordWildCards #-}
+{-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE RecordWildCards   #-}
 
 module Main where
 
@@ -12,8 +13,9 @@ import           Pipes
 import           Pipes.ByteString           (fromLazy)
 import qualified Pipes.Prelude              as P
 
+import           Control.Monad              (forever)
 import           System.Environment         (getArgs)
-import Control.Monad (forever)
+import           System.IO                  (hPutStrLn, stderr)
 
 main :: IO ()
 main = do
@@ -25,30 +27,31 @@ main = do
         >-> P.take 50
         >-> printAT
 
-data AT = AT { _sAT  :: !Double
-             , _sAT0 :: !Double
-             , _mAT1 :: !Double
-             , _mAT2 :: !Double
-             } deriving Show
+data Var = Var { _sAT  :: !Double
+               , _sAT0 :: !Double
+               , _mAT1 :: !Double
+               , _mAT2 :: !Double
+               , _Qz   :: !Double
+               } deriving Show
 
-printAT :: MonadIO m => Consumer (Maybe AT) m ()
+printAT :: MonadIO m => Consumer (Maybe Var) m ()
 printAT = forever $ do
     vars <- await
     case vars of
-        Nothing      -> liftIO . putStrLn $ "nothing!"  -- return ()
-        Just AT {..} -> liftIO . putStrLn $
-            show _sAT <> "\t" <> show _sAT0 <> "\t"
-            <> show _mAT1 <> "\t" <> show _mAT2
+        Nothing       -> liftIO . hPutStrLn stderr $ "failed!"  -- return ()
+        Just Var {..} -> liftIO . putStrLn $
+            concatMap (\v -> show v <> "\t") [_sAT, _sAT0, _mAT1, _mAT2, _Qz]
 
-calcAT :: Double -> Double -> Double -> Event -> Maybe AT
+calcAT :: Double -> Double -> Double -> Event -> Maybe Var
 calcAT m0 m1 m2 ps = do
     (pH, pBs) <- selectP ps
     at <- mkAntler m0 m1 (visibles pBs)
     (mAT1, mAT2) <- mAT0 at
-    return $ AT { _sAT  = sAT  at pH
-                , _sAT0 = sAT0 at m2
-                , _mAT1 = mAT1
-                , _mAT2 = mAT2 }
+    return $ Var { _sAT  = sAT  at pH
+                 , _sAT0 = sAT0 at m2
+                 , _mAT1 = mAT1
+                 , _mAT2 = mAT2
+                 , _Qz   = pz pH }
 
 selectP :: Event -> Maybe (FourMomentum, [FourMomentum])
 selectP ev = do
