@@ -1,5 +1,4 @@
-{-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE RecordWildCards   #-}
+{-# LANGUAGE RecordWildCards #-}
 
 module Main where
 
@@ -24,7 +23,7 @@ main = do
     runEffect $ getLHEFEvent fromLazy events
         >-> P.map (calcAT 80.379 173.0 800)
         -- >-> P.map (calcAT 0 173.0 800)
-        >-> P.take 50
+        >-> P.take 10
         >-> printAT
 
 data Var = Var { _sAT  :: !Double
@@ -65,6 +64,7 @@ selectP ev = do
     topQuarks = ParticleType [6]
     isBquark = (== 5) . abs . idOf
 
+{-
 selectP' :: Event -> Maybe (FourMomentum, [FourMomentum])
 selectP' ev = do
     let topChild = particlesFrom topQuarks (eventEntry ev)
@@ -77,3 +77,4 @@ selectP' ev = do
   where
     topQuarks = ParticleType [6]
     isNeutrino = (`elem` neutrinos) . idOf
+-}
