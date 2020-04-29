@@ -1,3 +1,5 @@
+{-# LANGUAGE RecordWildCards #-}
+
 module Main where
 
 import           HEP.Kinematics.Antler
@@ -11,24 +13,42 @@ import           Pipes.ByteString           (fromLazy)
 import qualified Pipes.Prelude              as P
 
 import           System.Environment         (getArgs)
+import Control.Monad (forever)
 
 main :: IO ()
 main = do
     lheFile <- head <$> getArgs
     events <- decompress <$> B.readFile lheFile
     runEffect $ getLHEFEvent fromLazy events
-        >-> P.map (getSAT 80.379 173.0)
-        -- >-> P.map (getSAT' 0 173.0)
-        >-> P.print
+        >-> P.map (calcAT 80.379 173.0 800)
+        -- >-> P.map (calcAT 0 173.0 800)
+        >-> P.take 50
+        >-> printAT
 
-pH' :: FourMomentum
-pH' = setXYZT 0 0 0 (1 * 800)
+data AT = AT { _sAT  :: !Double
+             , _sAT0 :: !Double
+             , _mAT1 :: !Double
+             , _mAT2 :: !Double
+             } deriving Show
 
-getSAT :: Double -> Double -> Event -> Maybe (Double, Double)
-getSAT m0 m1 ps = do
+printAT :: MonadIO m => Consumer (Maybe AT) m ()
+printAT = forever $ do
+    vars <- await
+    case vars of
+        Nothing      -> liftIO . putStrLn $ "nothing!"  -- return ()
+        Just AT {..} -> liftIO . putStrLn $
+            show _sAT <> "\t" <> show _sAT0 <> "\t"
+            <> show _mAT1 <> "\t" <> show _mAT2
+
+calcAT :: Double -> Double -> Double -> Event -> Maybe AT
+calcAT m0 m1 m2 ps = do
     (pH, pBs) <- selectP ps
     at <- mkAntler m0 m1 (visibles pBs)
-    return (sAT at pH, sAT at pH')
+    (mAT1, mAT2) <- mAT0 at
+    return $ AT { _sAT  = sAT  at pH
+                , _sAT0 = sAT0 at m2
+                , _mAT1 = mAT1
+                , _mAT2 = mAT2 }
 
 selectP :: Event -> Maybe (FourMomentum, [FourMomentum])
 selectP ev = do
@@ -41,12 +61,6 @@ selectP ev = do
   where
     topQuarks = ParticleType [6]
     isBquark = (== 5) . abs . idOf
-
-getSAT' :: Double -> Double -> Event -> Maybe (Double, Double)
-getSAT' m0 m1 ps = do
-    (pH, pBs) <- selectP' ps
-    at <- mkAntler m0 m1 (visibles pBs)
-    return (sAT at pH, sAT at pH')
 
 selectP' :: Event -> Maybe (FourMomentum, [FourMomentum])
 selectP' ev = do

@@ -4,7 +4,10 @@ module HEP.Kinematics.Antler where
 
 import HEP.Data.Util.Matrix
 
-import HEP.Kinematics       (FourMomentum, HasFourMomentum (..), dot)
+import HEP.Kinematics
+import HEP.Kinematics.Vector.LorentzVector (setXYZT)
+
+-- import Debug.Trace
 
 data Antler = Antler { _M0sq  :: !Double
                      , _M1sq  :: !Double
@@ -88,7 +91,37 @@ sAT Antler {..} pRoot =
 
         m6  = Mat22 (Row2 a02 a03) (Row2 a12 a13)
         m6' = Mat22 (Row2 a20 a21) (Row2 a30 a31)
-    in (/ (64 * _M1sq ** 3 + 1.0e-10)) $
+    in (/ (64 * _M1sq ** 3 + eps)) $
        det m1 * det m1' - det m2 * det m2'
         + det m3 * det m3' + det m4 * det m4'
         - det m5 * det m5' + det m6 * det m6'
+
+sAT0 :: Antler -> Double -> Double
+sAT0 at m2 = sAT at (setXYZT 0 0 0 m2)
+
+mAT0 :: Antler -> Maybe (Double, Double)
+mAT0 at@Antler{..} = do
+    let -- f m2 = 4 * _M1sq * sAT0 at m2
+        f = sAT0 at
+        fp1 = f 1
+        fm1 = f (-1)
+        f2  = f 2
+
+        a = - fp1 / 2 + fm1 / 6 + f2 / 3
+        b = fp1 / 2 - fm1 / 2
+        c = fp1 + fm1 / 3 - f2 / 3
+
+        d' = b ** 2 - 4 * a * c
+
+    -- this is a heuristic method to avoid some numerical uncertainties.
+    if d' < - 1 / sqrt (_M1sq + _M0sq + _mV1sq + _mV1sq)
+        then Nothing
+        else do let d = if d' < 0 then 0 else d'
+                    q = -0.5 * (b + signum b * sqrt d)
+                    sol = (q / (a + eps), c / (q  + eps))
+                    sol1 = uncurry min sol
+                    sol2 = uncurry max sol
+                return (sol1, sol2)
+
+eps :: Double
+eps = 1.0e-10
