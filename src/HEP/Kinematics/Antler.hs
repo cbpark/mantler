@@ -41,11 +41,29 @@ visibles ps | length ps == 2 = let [p1, p2] = ps
                                            , _p2 = fourMomentum p2 }
             | otherwise      = NE
 
+data AT = AT { _sAT  :: !Double  -- ^ sigma_{AT}
+             , _mAT1 :: !Double  -- ^ min(M_{AT})
+             , _mAT2 :: !Double  -- ^ max(M_{AT})
+             } deriving Show
 
-sAT :: Antler
-    -> FourMomentum  -- ^ four-momentum of the heavy resonance
-    -> Double
-sAT Antler {..} pRoot =
+calcAT :: Antler
+       -> Double  -- ^ - p_{x} component of the ISR
+       -> Double  -- ^ - p_{y} component of the ISR
+       -> Double  -- ^ a guess of the longitudinal momentum of the resonance
+       -> Double  -- ^ the squared mass of the resonance
+       -> AT
+calcAT at qx qy qz m2sq =
+    case mAT at qx qy 0 of
+        Nothing           -> AT sATval 0 0
+        Just (mAT1, mAT2) -> AT { _sAT  = sATval
+                                , _mAT1 = mAT1
+                                , _mAT2 = mAT2 }
+  where sATval = sAT at qx qy qz m2sq
+
+sAT0 :: Antler
+     -> FourMomentum  -- ^ four-momentum of the heavy resonance
+     -> Double
+sAT0 Antler {..} pRoot =
     let qp1 = pRoot `dot` _v1
         qp2 = pRoot `dot` _v2
         qSq = pRoot `dot` pRoot
@@ -93,8 +111,13 @@ sAT Antler {..} pRoot =
         + det m3 * det m3' + det m4 * det m4'
         - det m5 * det m5' + det m6 * det m6'
 
-sAT' :: Antler -> Double -> Double -> Double -> Double -> Double
-sAT' at qx qy qz m2sq = sAT at (setXYZT qx qy qz e)
+sAT :: Antler
+    -> Double  -- ^ - p_{x} component of the ISR
+    -> Double  -- ^ - p_{y} component of the ISR
+    -> Double  -- ^ a guess of the longitudinal momentum of the resonance
+    -> Double  -- ^ the squared mass of the resonance
+    -> Double
+sAT at qx qy qz m2sq = sAT0 at (setXYZT qx qy qz e)
   where e = sqrt $ m2sq + qx * qx + qy * qy + qz * qz
 
 mAT :: Antler
@@ -102,33 +125,41 @@ mAT :: Antler
     -> Double  -- ^ - p_{y} component of the ISR
     -> Double  -- ^ a guess of the longitudinal momentum of the resonance
     -> Maybe (Double, Double)
-mAT at@Antler{..} qx qy qz = do
-    let f = sAT' at qx qy qz
-        pSq = qx * qx + qy * qy + qz * qz
-        p  = sqrt pSq
-        m1 = sqrt _M1sq
+mAT at@Antler{..} qx qy qz
+    | _M1sq <= 0 = Nothing
+    | otherwise  = do
+          let f = sAT at qx qy qz
+              pSq = qx * qx + qy * qy + qz * qz
+              p  = sqrt pSq
+              m1 = sqrt _M1sq
 
-        f1 = f ((2 * m1 + p) ** 2 - pSq)
-        f2 = f ((3 * m1 + p) ** 2 - pSq)
-        f3 = f ((4 * m1 + p) ** 2 - pSq)
+              f1 = f ((2 * m1 + p) ** 2 - pSq)
+              f2 = f ((3 * m1 + p) ** 2 - pSq)
+              f3 = f ((4 * m1 + p) ** 2 - pSq)
+              denom = 2 * _M1sq
 
-        a = (f1 - 2 * f2 + f3) / (2 * _M1sq)
-        b = (/ (2 * _M1sq)) $
-            - (2 * p +  7 * m1) * f1
-            + (4 * p + 12 * m1) * f2
-            - (2 * p +  5 * m1) * f3
-        c = (/ (2 * _M1sq)) $
-                  (p + 3 * m1) * (p + 4 * m1) * f1
-            - 2 * (p + 2 * m1) * (p + 4 * m1) * f2
-            +     (p + 2 * m1) * (p + 3 * m1) * f3
+              a = (f1 - 2 * f2 + f3) / denom
+              -- a = trace ("a = " ++ show a') a'
+              b = (/ denom) $
+                  - (2 * p +  7 * m1) * f1
+                  + (4 * p + 12 * m1) * f2
+                  - (2 * p +  5 * m1) * f3
+              -- b = trace ("b = " ++ show b') b'
+              c = (/ denom) $
+                        (p + 3 * m1) * (p + 4 * m1) * f1
+                  - 2 * (p + 2 * m1) * (p + 4 * m1) * f2
+                  +     (p + 2 * m1) * (p + 3 * m1) * f3
+              -- c = trace ("c = " ++ show c') c'
 
-    (solET1, solET2) <- quadEqSolver a b c (1 / m1)
+          (solET1, solET2) <- quadEqSolver a b c (1 / m1)
 
-    let mSols = ( sqrt0 $ solET1 * solET1 - pSq
-                , sqrt0 $ solET2 * solET2 - pSq )
-        sol1 = uncurry min mSols
-        sol2 = uncurry max mSols
-    return (sol1, sol2)
+          let mSols = ( sqrt0 $ solET1 * solET1 - pSq
+                      , sqrt0 $ solET2 * solET2 - pSq )
+              sol1 = uncurry min mSols
+              sol2 = uncurry max mSols
+          return (sol1, sol2)
+
+
 
 data Row2 e = Row2 !e !e deriving Show
 
@@ -140,13 +171,13 @@ det (Mat22 (Row2 a b) (Row2 c d)) = a * d - b * c
 sqrt0 :: Double -> Double
 sqrt0 x = if x < 0 then 1.0e+10 else sqrt x
 
--- | the roots of quadratic equation: A x^2 + B x + C = 0.
+-- | the real roots of quadratic equation: A x^2 + B x + C = 0.
 --
 -- If the root x0 is complex and |Im(x0)| < cut, it returns Re(x0).
 quadEqSolver :: Double  -- ^ the coefficient A
              -> Double  -- ^ the coefficient B
              -> Double  -- ^ the coefficient C
-             -> Double  -- ^ the cut value on the complex root
+             -> Double  -- ^ the cut value for complex roots
              -> Maybe (Double, Double)
 quadEqSolver a b c epsScale = do
     let d = b * b - 4 * a * c
