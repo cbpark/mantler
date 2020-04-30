@@ -7,13 +7,13 @@ import HEP.Kinematics.Vector.LorentzVector (setXYZT)
 
 -- import Debug.Trace
 
-data Antler = Antler { _M0sq  :: !Double
-                     , _M1sq  :: !Double
-                     , _mV1sq :: !Double
-                     , _mV2sq :: !Double
-                     , _v1    :: !FourMomentum
-                     , _v2    :: !FourMomentum
-                     , _v1v2  :: !Double
+data Antler = Antler { _M0sq  :: !Double        -- ^ m_C^2
+                     , _M1sq  :: !Double        -- ^ m_B^2
+                     , _mV1sq :: !Double        -- ^ p1^2 = m_{v1}^2
+                     , _mV2sq :: !Double        -- ^ p2^2 = m_{v2}^2
+                     , _v1    :: !FourMomentum  -- ^ p1
+                     , _v2    :: !FourMomentum  -- ^ p2
+                     , _v1v2  :: !Double        -- ^ p1 . p2
                      } deriving Show
 
 mkAntler :: Double -> Double -> Visibles -> Maybe Antler
@@ -42,7 +42,9 @@ visibles ps | length ps == 2 = let [p1, p2] = ps
             | otherwise      = NE
 
 
-sAT :: Antler -> FourMomentum -> Double
+sAT :: Antler
+    -> FourMomentum  -- ^ four-momentum of the heavy resonance
+    -> Double
 sAT Antler {..} pRoot =
     let qp1 = pRoot `dot` _v1
         qp2 = pRoot `dot` _v2
@@ -64,14 +66,10 @@ sAT Antler {..} pRoot =
         a22 = 2 * _mV2sq
         a23 = 2 * qp2
 
-        -- a30 = a03
-        -- a31 = a13
-        -- a32 = a23
-        -- a33 = 2 * qSq
-        a30 = a03 / qSq
-        a31 = a13 / qSq
-        a32 = a23 / qSq
-        a33 = 2
+        a30 = a03 / qSq  -- a03
+        a31 = a13 / qSq  -- a13
+        a32 = a23 / qSq  -- a23
+        a33 = 2          -- 2 * qSq
 
         m1  = Mat22 (Row2 a00 a01) (Row2 a10 a11)
         m1' = Mat22 (Row2 a22 a23) (Row2 a32 a33)
