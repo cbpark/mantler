@@ -37,7 +37,7 @@ main = do
             runEffect $ getLHEFEvent fromLazy events
             >-> P.map (calcVar 80.379 173.0 800)
             -- >-> P.map (calcVar 0 173.0 800)
-            >-> P.take 10
+            >-> P.take 3
             >-> printVar h
 
     if lenArg == 1

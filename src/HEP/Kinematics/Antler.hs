@@ -5,7 +5,7 @@ module HEP.Kinematics.Antler where
 import HEP.Kinematics
 import HEP.Kinematics.Vector.LorentzVector (setXYZT)
 
--- import Debug.Trace
+import Debug.Trace
 
 data Antler = Antler { _M0sq  :: !Double        -- ^ m_C^2
                      , _M1sq  :: !Double        -- ^ m_B^2
@@ -138,18 +138,18 @@ mAT at@Antler{..} qx qy qz
               f3 = f ((4 * m1 + p) ** 2 - pSq)
               denom = 2 * _M1sq
 
-              a = (f1 - 2 * f2 + f3) / denom
-              -- a = trace ("a = " ++ show a') a'
-              b = (/ denom) $
+              a' = (f1 - 2 * f2 + f3) / denom
+              a = trace ("a = " ++ show a') a'
+              b' = (/ denom) $
                   - (2 * p +  7 * m1) * f1
                   + (4 * p + 12 * m1) * f2
                   - (2 * p +  5 * m1) * f3
-              -- b = trace ("b = " ++ show b') b'
-              c = (/ denom) $
+              b = trace ("b = " ++ show b') b'
+              c' = (/ denom) $
                         (p + 3 * m1) * (p + 4 * m1) * f1
                   - 2 * (p + 2 * m1) * (p + 4 * m1) * f2
                   +     (p + 2 * m1) * (p + 3 * m1) * f3
-              -- c = trace ("c = " ++ show c') c'
+              c = trace ("c = " ++ show c') c'
 
           (solET1, solET2) <- quadEqSolver a b c (1 / m1)
 
@@ -158,8 +158,6 @@ mAT at@Antler{..} qx qy qz
               sol1 = uncurry min mSols
               sol2 = uncurry max mSols
           return (sol1, sol2)
-
-
 
 data Row2 e = Row2 !e !e deriving Show
 
