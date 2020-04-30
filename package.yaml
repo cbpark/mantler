@@ -19,6 +19,7 @@ executables:
     source-dirs: src
     dependencies:
       - bytestring
+      - double-conversion
       - pipes
       - pipes-bytestring
       - zlib

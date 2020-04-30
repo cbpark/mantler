@@ -96,8 +96,8 @@ sAT Antler {..} pRoot =
         - det m5 * det m5' + det m6 * det m6'
 
 sAT' :: Antler -> Double -> Double -> Double -> Double -> Double
-sAT' at qx qy qz m2sq = sAT at (setXYZT qx qy qz et)
-  where et = sqrt $ m2sq + qx * qx + qy * qy
+sAT' at qx qy qz m2sq = sAT at (setXYZT qx qy qz e)
+  where e = sqrt $ m2sq + qx * qx + qy * qy + qz * qz
 
 mAT :: Antler
     -> Double  -- ^ - p_{x} component of the ISR

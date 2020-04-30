@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: b44ae34c1551dcffb94c45ed6a553856964a0a77dd3afb43e2853c07563d0276
+-- hash: bc2ddc077e73ffe4f8ad514c38ca04aa9b8a2c9c4e86a101e6f02c1cd1616233
 
 name:           Mantler
 version:        0.0.0.0
@@ -32,6 +32,7 @@ executable mATLHEF
   build-depends:
       base >=4.12.0.0 && <5
     , bytestring
+    , double-conversion
     , hep-utilities
     , pipes
     , pipes-bytestring
