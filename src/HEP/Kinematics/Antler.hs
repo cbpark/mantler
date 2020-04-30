@@ -5,6 +5,8 @@ module HEP.Kinematics.Antler where
 import HEP.Kinematics
 import HEP.Kinematics.Vector.LorentzVector (setXYZT)
 
+-- import Debug.Trace
+
 data Antler = Antler { _M0sq  :: !Double
                      , _M1sq  :: !Double
                      , _mV1sq :: !Double
@@ -93,39 +95,72 @@ sAT Antler {..} pRoot =
         + det m3 * det m3' + det m4 * det m4'
         - det m5 * det m5' + det m6 * det m6'
 
-sAT0 :: Antler -> Double -> Double
-sAT0 at m2 = sAT at (setXYZT 0 0 0 m2)
+sAT' :: Antler -> Double -> Double -> Double -> Double -> Double
+sAT' at qx qy qz m2sq = sAT at (setXYZT qx qy qz et)
+  where et = sqrt $ m2sq + qx * qx + qy * qy
 
-mAT0 :: Antler -> Maybe (Double, Double)
-mAT0 at@Antler{..} = do
-    let -- f m2 = 4 * _M1sq * sAT0 at m2
-        f = sAT0 at
-        fp1 = f 1
-        fm1 = f (-1)
-        f2  = f 2
+mAT :: Antler
+    -> Double  -- ^ - p_{x} component of the ISR
+    -> Double  -- ^ - p_{y} component of the ISR
+    -> Double  -- ^ a guess of the longitudinal momentum of the resonance
+    -> Maybe (Double, Double)
+mAT at@Antler{..} qx qy qz = do
+    let f = sAT' at qx qy qz
+        pSq = qx * qx + qy * qy + qz * qz
+        p  = sqrt pSq
+        m1 = sqrt _M1sq
 
-        a = - fp1 / 2 + fm1 / 6 + f2 / 3
-        b = fp1 / 2 - fm1 / 2
-        c = fp1 + fm1 / 3 - f2 / 3
+        f1 = f ((2 * m1 + p) ** 2 - pSq)
+        f2 = f ((3 * m1 + p) ** 2 - pSq)
+        f3 = f ((4 * m1 + p) ** 2 - pSq)
 
-        d' = b ** 2 - 4 * a * c
+        a = (f1 - 2 * f2 + f3) / (2 * _M1sq)
+        b = (/ (2 * _M1sq)) $
+            - (2 * p +  7 * m1) * f1
+            + (4 * p + 12 * m1) * f2
+            - (2 * p +  5 * m1) * f3
+        c = (/ (2 * _M1sq)) $
+                  (p + 3 * m1) * (p + 4 * m1) * f1
+            - 2 * (p + 2 * m1) * (p + 4 * m1) * f2
+            +     (p + 2 * m1) * (p + 3 * m1) * f3
 
-    -- this is a heuristic method to avoid some numerical uncertainties.
-    if d' < - 1 / sqrt (_M1sq + _M0sq + _mV1sq + _mV1sq)
-        then Nothing
-        else do let d = if d' < 0 then 0 else d'
-                    q = -0.5 * (b + signum b * sqrt d)
-                    sol = (q / (a + eps), c / (q  + eps))
-                    sol1 = uncurry min sol
-                    sol2 = uncurry max sol
-                return (sol1, sol2)
+    (solET1, solET2) <- quadEqSolver a b c (1 / m1)
 
-data Row2 e = Row2 e e deriving Show
+    let mSols = ( sqrt0 $ solET1 * solET1 - pSq
+                , sqrt0 $ solET2 * solET2 - pSq )
+        sol1 = uncurry min mSols
+        sol2 = uncurry max mSols
+    return (sol1, sol2)
+
+data Row2 e = Row2 !e !e deriving Show
 
 data Mat22 e = Mat22 (Row2 e) (Row2 e) deriving Show
 
 det :: Num e => Mat22 e -> e
 det (Mat22 (Row2 a b) (Row2 c d)) = a * d - b * c
 
+sqrt0 :: Double -> Double
+sqrt0 x = if x < 0 then 1.0e+10 else sqrt x
+
+-- | the roots of quadratic equation: A x^2 + B x + C = 0.
+--
+-- If the root x0 is complex and |Im(x0)| < cut, it returns Re(x0).
+quadEqSolver :: Double  -- ^ the coefficient A
+             -> Double  -- ^ the coefficient B
+             -> Double  -- ^ the coefficient C
+             -> Double  -- ^ the cut value on the complex root
+             -> Maybe (Double, Double)
+quadEqSolver a b c epsScale = do
+    let d = b * b - 4 * a * c
+    if d >= 0
+        then do let q = -0.5 * (b + signum b * sqrt d)
+                return (q / (a + eps), c / (q  + eps))
+        else do let r = sqrt $ c / (a + eps)
+                    th = acos $ - b / (2 * sqrt (a * c) + eps)
+                    x = r * cos th
+                if abs (r * sin th) < epsScale
+                    then return (x, x)
+                    else Nothing
+
 eps :: Double
-eps = 1.0e-10
+eps = 1.0e-12

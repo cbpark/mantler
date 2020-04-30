@@ -39,15 +39,18 @@ printAT = forever $ do
     case vars of
         Nothing       -> liftIO . hPutStrLn stderr $ "failed!"  -- return ()
         Just Var {..} -> liftIO . putStrLn $
-            concatMap (\v -> show v <> "\t") [_sAT, _sAT0, _mAT1, _mAT2, _Qz]
+            -- concatMap (\v -> show v <> "\t") [_sAT, _sAT0, _mAT1, _mAT2, _Qz]
+            concatMap (\v -> show v <> "\t") [_sAT, _sAT0, _mAT1, _mAT2]
 
 calcAT :: Double -> Double -> Double -> Event -> Maybe Var
 calcAT m0 m1 m2 ps = do
     (pH, pBs) <- selectP ps
     at <- mkAntler m0 m1 (visibles pBs)
-    (mAT1, mAT2) <- mAT0 at
+    let qx = px pH
+        qy = py pH
+    (mAT1, mAT2) <- mAT at qx qy 0
     return $ Var { _sAT  = sAT  at pH
-                 , _sAT0 = sAT0 at m2
+                 , _sAT0 = sAT' at qx qy 0 (m2 * m2)
                  , _mAT1 = mAT1
                  , _mAT2 = mAT2
                  , _Qz   = pz pH }
