@@ -12,6 +12,7 @@ import           Data.ByteString                   (ByteString)
 import qualified Data.ByteString.Char8             as C
 import qualified Data.ByteString.Lazy.Char8        as BL
 import           Data.Double.Conversion.ByteString
+
 import           Pipes
 import           Pipes.ByteString                  (fromLazy)
 import qualified Pipes.Prelude                     as P
@@ -31,6 +32,7 @@ main = do
         die "-- Usage: mATLHEF <LHEF file gzipped> [output]"
 
     let lheFile = head args
+    putStrLn $ "-- The input LHEF file is " <> lheFile <> "."
     events <- decompress <$> BL.readFile lheFile
 
     let writeOutput h =
@@ -45,7 +47,11 @@ main = do
         else do let outfile = args !! 1
                 withFile outfile WriteMode $ \h -> do
                     BL.hPutStrLn h header
+                    putStrLn "-- Calculating the event variables ..."
                     writeOutput h
+
+                putStrLn $ "-- ... Done!\n"
+                    <> "-- " <> outfile <> " has been generated."
 
 showAT :: AT -> ByteString
 showAT AT {..} =
