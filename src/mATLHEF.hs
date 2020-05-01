@@ -4,12 +4,13 @@
 module Main where
 
 import           HEP.Kinematics.Antler
+import           MAT.Helper
 
 import           HEP.Data.LHEF
 
 import           Codec.Compression.GZip            (decompress)
-import           Data.ByteString                   (ByteString)
 import qualified Data.ByteString.Char8             as C
+import           Data.ByteString.Lazy.Char8        (ByteString)
 import qualified Data.ByteString.Lazy.Char8        as BL
 import           Data.Double.Conversion.ByteString
 
@@ -39,7 +40,7 @@ main = do
             runEffect $ getLHEFEvent fromLazy events
             >-> P.map (calcVar 80.379 173.0 800)
             -- >-> P.map (calcVar 0 173.0 800)
-            -- >-> P.take 3
+            >-> P.take 3
             >-> printVar h
 
     if lenArg == 1
@@ -52,10 +53,6 @@ main = do
 
                 putStrLn $ "-- ... Done!\n"
                     <> "-- " <> outfile <> " has been generated."
-
-showAT :: AT -> ByteString
-showAT AT {..} =
-    toExponential 8 _sAT <> "  " <> toFixed 4 _mAT1 <> "  " <> toFixed 4 _mAT2
 
 data Var = Var { -- | sigma_{AT} for true momenta
                  _sATtrue :: !Double
@@ -125,7 +122,7 @@ selectP' ev = do
     isNeutrino = (`elem` neutrinos) . idOf
 -}
 
-header :: BL.ByteString
+header :: ByteString
 header = BL.pack $ "# " <>
          foldl1 (\v1 v2 -> v1 <> ", " <> v2)
          (zipWith (\n v -> "(" <> show n <> ") " <> v) ([1..] :: [Int])

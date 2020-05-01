@@ -43,25 +43,6 @@ visibles ps | length ps == 2 = let [p1, p2] = ps
                                            , _p2 = fourMomentum p2 }
             | otherwise      = NE
 
-data AT = AT { _sAT  :: !Double  -- ^ sigma_{AT}
-             , _mAT1 :: !Double  -- ^ min(M_{AT})
-             , _mAT2 :: !Double  -- ^ max(M_{AT})
-             } deriving Show
-
-calcAT :: Antler
-       -> Double  -- ^ - p_{x} component of the ISR
-       -> Double  -- ^ - p_{y} component of the ISR
-       -> Double  -- ^ a guess of the longitudinal momentum of the resonance
-       -> Double  -- ^ the energy of the resonance
-       -> AT
-calcAT at qx qy qz e =
-    case mAT at qx qy 0 of
-        Nothing           -> AT sATval 0 0
-        Just (mAT1, mAT2) -> AT { _sAT  = sATval
-                                , _mAT1 = mAT1
-                                , _mAT2 = mAT2 }
-  where sATval = sAT at qx qy qz e
-
 sAT :: Antler
     -> Double  -- ^ - p_{x} component of the ISR
     -> Double  -- ^ - p_{y} component of the ISR

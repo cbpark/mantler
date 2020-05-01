@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 2c1d2bfdef3f362671793598fde7c3733735faccfc1e98dadf997b874e616f55
+-- hash: 2537fa5f9ae223519069dc4ff6981883036b573db038a68ebe827f0a06e8515e
 
 name:           mantler
 version:        0.0.0.0
@@ -41,6 +41,7 @@ library
 executable mATLHEF
   main-is: mATLHEF.hs
   other-modules:
+      MAT.Helper
       Paths_mantler
   hs-source-dirs:
       src
