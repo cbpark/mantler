@@ -20,6 +20,17 @@ library:
   dependencies: hmatrix-gsl
 
 executables:
+  phasespace:
+    main: phasespace.hs
+    source-dirs: src
+    dependencies:
+      - bytestring
+      - double-conversion
+      - pipes
+      - pipes-bytestring
+      - zlib
+      - mantler
+
   mATLHEF:
     main: mATLHEF.hs
     source-dirs: src
