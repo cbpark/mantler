@@ -52,17 +52,23 @@ calcAT :: Antler
        -> Double  -- ^ - p_{x} component of the ISR
        -> Double  -- ^ - p_{y} component of the ISR
        -> Double  -- ^ a guess of the longitudinal momentum of the resonance
-       -> Double  -- ^ the squared mass of the resonance
+       -> Double  -- ^ the energy of the resonance
        -> AT
--- calcAT at qx qy qz m2sq =
 calcAT at qx qy qz e =
     case mAT at qx qy 0 of
         Nothing           -> AT sATval 0 0
         Just (mAT1, mAT2) -> AT { _sAT  = sATval
                                 , _mAT1 = mAT1
                                 , _mAT2 = mAT2 }
-  -- where sATval = sAT at qx qy qz m2sq
   where sATval = sAT at qx qy qz e
+
+sAT :: Antler
+    -> Double  -- ^ - p_{x} component of the ISR
+    -> Double  -- ^ - p_{y} component of the ISR
+    -> Double  -- ^ a guess of the longitudinal momentum of the resonance
+    -> Double  -- ^ the energy of the resonance
+    -> Double
+sAT at qx qy qz e = sAT0 at (setXYZT qx qy qz e)
 
 sAT0 :: Antler
      -> FourMomentum  -- ^ four-momentum of the heavy resonance
@@ -114,17 +120,6 @@ sAT0 Antler {..} pRoot =
        det m1 * det m1' - det m2 * det m2'
         + det m3 * det m3' + det m4 * det m4'
         - det m5 * det m5' + det m6 * det m6'
-
-sAT :: Antler
-    -> Double  -- ^ - p_{x} component of the ISR
-    -> Double  -- ^ - p_{y} component of the ISR
-    -> Double  -- ^ a guess of the longitudinal momentum of the resonance
-    -> Double  -- ^ the squared mass of the resonance
-    -> Double
--- sAT at qx qy qz m2sq = sAT0 at (setXYZT qx qy qz e)
---   where e = sqrt $ m2sq + qx * qx + qy * qy + qz * qz
-sAT at qx qy qz e = sAT0 at (setXYZT qx qy qz e)
-  -- where e = sqrt $ m2sq + qx * qx + qy * qy + qz * qz
 
 mAT :: Antler
     -> Double  -- ^ - p_{x} component of the ISR

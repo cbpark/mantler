@@ -4,13 +4,13 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 4a5845e5b77d600b075bede4d424d8cd8bf1e6e1d0e2be4cab94a80d9ca7ce00
+-- hash: 2c1d2bfdef3f362671793598fde7c3733735faccfc1e98dadf997b874e616f55
 
-name:           Mantler
+name:           mantler
 version:        0.0.0.0
 category:       Physics
-homepage:       https://github.com/cbpark/Mantler#readme
-bug-reports:    https://github.com/cbpark/Mantler/issues
+homepage:       https://github.com/cbpark/mantler#readme
+bug-reports:    https://github.com/cbpark/mantler/issues
 author:         Chan Beom Park
 maintainer:     cbpark@gmail.com
 license:        BSD3
@@ -19,16 +19,29 @@ build-type:     Simple
 
 source-repository head
   type: git
-  location: https://github.com/cbpark/Mantler
+  location: https://github.com/cbpark/mantler
+
+library
+  exposed-modules:
+      HEP.Kinematics.Antler
+  other-modules:
+      HEP.Util
+      HEP.Util.Matrix
+      HEP.Util.Polynomial
+      Paths_mantler
+  hs-source-dirs:
+      lib
+  ghc-options: -Wall -Wcompat -O2 -funbox-strict-fields
+  build-depends:
+      base >=4.12.0.0 && <5
+    , hep-utilities
+    , hmatrix-gsl
+  default-language: Haskell2010
 
 executable mATLHEF
   main-is: mATLHEF.hs
   other-modules:
-      HEP.Kinematics.Antler
-      HEP.Util
-      HEP.Util.Matrix
-      HEP.Util.Polynomial
-      Paths_Mantler
+      Paths_mantler
   hs-source-dirs:
       src
   ghc-options: -Wall -Wcompat -O2 -funbox-strict-fields
@@ -37,7 +50,7 @@ executable mATLHEF
     , bytestring
     , double-conversion
     , hep-utilities
-    , hmatrix-gsl
+    , mantler
     , pipes
     , pipes-bytestring
     , zlib

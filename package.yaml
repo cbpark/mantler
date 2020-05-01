@@ -1,18 +1,23 @@
-name:         Mantler
+name:         mantler
 version:      "0.0.0.0"
 # synopsis:
 author:       Chan Beom Park
 maintainer:   cbpark@gmail.com
 license-file: LICENSE
-github:       cbpark/Mantler
+github:       cbpark/mantler
 category:     Physics
 
 ghc-options:  -Wall -Wcompat -O2 -funbox-strict-fields
 
 dependencies:
   - base >= 4.12.0.0 && < 5
-  - hmatrix-gsl
   - hep-utilities
+
+library:
+  exposed-modules:
+    - HEP.Kinematics.Antler
+  source-dirs: lib
+  dependencies: hmatrix-gsl
 
 executables:
   mATLHEF:
@@ -24,3 +29,4 @@ executables:
       - pipes
       - pipes-bytestring
       - zlib
+      - mantler

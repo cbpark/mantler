@@ -37,7 +37,7 @@ main = do
             runEffect $ getLHEFEvent fromLazy events
             >-> P.map (calcVar 80.379 173.0 800)
             -- >-> P.map (calcVar 0 173.0 800)
-            >-> P.take 3
+            -- >-> P.take 3
             >-> printVar h
 
     if lenArg == 1
@@ -79,14 +79,13 @@ calcVar m0 m1 m2 ps = do
     let qx = px pH
         qy = py pH
         qz = pz pH
-        m2sq = m2 * m2
 
         -- assuming that the resonance was produced at rest
         at0 = calcAT at 0 0 0 m2
 
         -- assuming that the transverse momenta
         -- of the resonance are known a priori
-        atT = calcAT at qx qy 0 (sqrt $ m2sq + qx * qx + qy * qy)
+        atT = calcAT at qx qy 0 (sqrt $ m2 * m2 + qx * qx + qy * qy)
 
     return $ Var { _sATtrue = sAT0 at pH
                  , _AT0     = at0
