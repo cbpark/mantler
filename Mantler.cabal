@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: bc2ddc077e73ffe4f8ad514c38ca04aa9b8a2c9c4e86a101e6f02c1cd1616233
+-- hash: 4a5845e5b77d600b075bede4d424d8cd8bf1e6e1d0e2be4cab94a80d9ca7ce00
 
 name:           Mantler
 version:        0.0.0.0
@@ -25,6 +25,9 @@ executable mATLHEF
   main-is: mATLHEF.hs
   other-modules:
       HEP.Kinematics.Antler
+      HEP.Util
+      HEP.Util.Matrix
+      HEP.Util.Polynomial
       Paths_Mantler
   hs-source-dirs:
       src
@@ -34,6 +37,7 @@ executable mATLHEF
     , bytestring
     , double-conversion
     , hep-utilities
+    , hmatrix-gsl
     , pipes
     , pipes-bytestring
     , zlib

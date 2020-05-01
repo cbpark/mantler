@@ -2,10 +2,12 @@
 
 module HEP.Kinematics.Antler where
 
+import HEP.Util
+
 import HEP.Kinematics
 import HEP.Kinematics.Vector.LorentzVector (setXYZT)
 
-import Debug.Trace
+-- import Debug.Trace
 
 data Antler = Antler { _M0sq  :: !Double        -- ^ m_C^2
                      , _M1sq  :: !Double        -- ^ m_B^2
@@ -52,13 +54,15 @@ calcAT :: Antler
        -> Double  -- ^ a guess of the longitudinal momentum of the resonance
        -> Double  -- ^ the squared mass of the resonance
        -> AT
-calcAT at qx qy qz m2sq =
+-- calcAT at qx qy qz m2sq =
+calcAT at qx qy qz e =
     case mAT at qx qy 0 of
         Nothing           -> AT sATval 0 0
         Just (mAT1, mAT2) -> AT { _sAT  = sATval
                                 , _mAT1 = mAT1
                                 , _mAT2 = mAT2 }
-  where sATval = sAT at qx qy qz m2sq
+  -- where sATval = sAT at qx qy qz m2sq
+  where sATval = sAT at qx qy qz e
 
 sAT0 :: Antler
      -> FourMomentum  -- ^ four-momentum of the heavy resonance
@@ -84,10 +88,10 @@ sAT0 Antler {..} pRoot =
         a22 = 2 * _mV2sq
         a23 = 2 * qp2
 
-        a30 = a03 / qSq  -- a03
-        a31 = a13 / qSq  -- a13
-        a32 = a23 / qSq  -- a23
-        a33 = 2          -- 2 * qSq
+        a30 = a03
+        a31 = a13
+        a32 = a23
+        a33 = 2 * qSq
 
         m1  = Mat22 (Row2 a00 a01) (Row2 a10 a11)
         m1' = Mat22 (Row2 a22 a23) (Row2 a32 a33)
@@ -106,7 +110,7 @@ sAT0 Antler {..} pRoot =
 
         m6  = Mat22 (Row2 a02 a03) (Row2 a12 a13)
         m6' = Mat22 (Row2 a20 a21) (Row2 a30 a31)
-    in (/ (64 * _M1sq ** 3 + eps)) $
+    in (/ (_M1sq ** 4 + 1.0e-12)) $
        det m1 * det m1' - det m2 * det m2'
         + det m3 * det m3' + det m4 * det m4'
         - det m5 * det m5' + det m6 * det m6'
@@ -117,8 +121,10 @@ sAT :: Antler
     -> Double  -- ^ a guess of the longitudinal momentum of the resonance
     -> Double  -- ^ the squared mass of the resonance
     -> Double
-sAT at qx qy qz m2sq = sAT0 at (setXYZT qx qy qz e)
-  where e = sqrt $ m2sq + qx * qx + qy * qy + qz * qz
+-- sAT at qx qy qz m2sq = sAT0 at (setXYZT qx qy qz e)
+--   where e = sqrt $ m2sq + qx * qx + qy * qy + qz * qz
+sAT at qx qy qz e = sAT0 at (setXYZT qx qy qz e)
+  -- where e = sqrt $ m2sq + qx * qx + qy * qy + qz * qz
 
 mAT :: Antler
     -> Double  -- ^ - p_{x} component of the ISR
@@ -129,65 +135,16 @@ mAT at@Antler{..} qx qy qz
     | _M1sq <= 0 = Nothing
     | otherwise  = do
           let f = sAT at qx qy qz
-              pSq = qx * qx + qy * qy + qz * qz
-              p  = sqrt pSq
               m1 = sqrt _M1sq
 
-              f1 = f ((2 * m1 + p) ** 2 - pSq)
-              f2 = f ((3 * m1 + p) ** 2 - pSq)
-              f3 = f ((4 * m1 + p) ** 2 - pSq)
-              denom = 2 * _M1sq
+          (_, sol) <- quarticEqSol f [m1, 10 * m1, 100 * m1, 1000 * m1] 1.0e-3
+          -- let !nsol' = trace ("nsol = " ++ show nsol) nsol
 
-              a' = (f1 - 2 * f2 + f3) / denom
-              a = trace ("a = " ++ show a') a'
-              b' = (/ denom) $
-                  - (2 * p +  7 * m1) * f1
-                  + (4 * p + 12 * m1) * f2
-                  - (2 * p +  5 * m1) * f3
-              b = trace ("b = " ++ show b') b'
-              c' = (/ denom) $
-                        (p + 3 * m1) * (p + 4 * m1) * f1
-                  - 2 * (p + 2 * m1) * (p + 4 * m1) * f2
-                  +     (p + 2 * m1) * (p + 3 * m1) * f3
-              c = trace ("c = " ++ show c') c'
-
-          (solET1, solET2) <- quadEqSolver a b c (1 / m1)
-
-          let mSols = ( sqrt0 $ solET1 * solET1 - pSq
-                      , sqrt0 $ solET2 * solET2 - pSq )
-              sol1 = uncurry min mSols
-              sol2 = uncurry max mSols
-          return (sol1, sol2)
-
-data Row2 e = Row2 !e !e deriving Show
-
-data Mat22 e = Mat22 (Row2 e) (Row2 e) deriving Show
-
-det :: Num e => Mat22 e -> e
-det (Mat22 (Row2 a b) (Row2 c d)) = a * d - b * c
-
-sqrt0 :: Double -> Double
-sqrt0 x = if x < 0 then 1.0e+10 else sqrt x
-
--- | the real roots of quadratic equation: A x^2 + B x + C = 0.
---
--- If the root x0 is complex and |Im(x0)| < cut, it returns Re(x0).
-quadEqSolver :: Double  -- ^ the coefficient A
-             -> Double  -- ^ the coefficient B
-             -> Double  -- ^ the coefficient C
-             -> Double  -- ^ the cut value for complex roots
-             -> Maybe (Double, Double)
-quadEqSolver a b c epsScale = do
-    let d = b * b - 4 * a * c
-    if d >= 0
-        then do let q = -0.5 * (b + signum b * sqrt d)
-                return (q / (a + eps), c / (q  + eps))
-        else do let r = sqrt $ c / (a + eps)
-                    th = acos $ - b / (2 * sqrt (a * c) + eps)
-                    x = r * cos th
-                if abs (r * sin th) < epsScale
-                    then return (x, x)
-                    else Nothing
-
-eps :: Double
-eps = 1.0e-12
+          if null sol
+              then Nothing
+              else do let (eT1, eT2) = (,) <$> minimum <*> maximum $ sol
+                          pSq = qx * qx + qy * qy + qz * qz
+                      return ( sqrt0 $ eT1 * eT1 - pSq
+                             , sqrt0 $ eT2 * eT2 - pSq )
+    where
+      sqrt0 x = if x < 0 then 1.0e+10 else sqrt x

@@ -82,11 +82,11 @@ calcVar m0 m1 m2 ps = do
         m2sq = m2 * m2
 
         -- assuming that the resonance was produced at rest
-        at0 = calcAT at 0 0 0 m2sq
+        at0 = calcAT at 0 0 0 m2
 
         -- assuming that the transverse momenta
         -- of the resonance are known a priori
-        atT = calcAT at qx qy 0 m2sq
+        atT = calcAT at qx qy 0 (sqrt $ m2sq + qx * qx + qy * qy)
 
     return $ Var { _sATtrue = sAT0 at pH
                  , _AT0     = at0
