@@ -4,6 +4,7 @@
 module Main where
 
 import           HEP.Kinematics.Antler
+import           MAT.Helper
 
 import           HEP.Data.LHEF
 
@@ -38,26 +39,26 @@ main = do
         putStrLn "-- Calculating the event variables ..."
         runEffect $ getLHEFEvent fromLazy events
             >-> P.map (calcVar 80.379 173.0 800)
-            >-> P.take 3
+            -- >-> P.take 3
             >-> printVar h
 
     putStrLn $ "-- ... Done!\n" <> "-- " <> outfile <> " has been generated."
 
-data Var = Var { _deltaAT  :: !Double  -- ^ the AT variable for M2 = M2(true)
-               , _deltaAT1 :: !Double -- ^ the AT variables for M2 = M2(true) / 2
-               , _deltaAT2 :: !Double -- ^ the AT variables for M2 = 2 * M2(true)
+data Var = Var { _deltaAT1 :: !Double -- ^ the AT variable for M2 = M2(true) / 2
+               , _deltaAT2 :: !Double -- ^ the AT variable for M2 = 2 * M2(true)
+               , _atTrue   :: !AT  -- ^ the AT variabless for M2 = M2(true)
                } deriving Show
 
 calcVar :: Double -> Double -> Double -> Event -> Maybe Var
 calcVar m0 m1 m2 ps = do
     (_, pBs) <- selectP ps
     at <- mkAntler m0 m1 (visibles pBs)
-    let deltaATval  = deltaAT at 0 0 0 m2
-        deltaATval1 = deltaAT at 0 0 0 (m2 / 2)
+    let deltaATval1 = deltaAT at 0 0 0 (m2 / 2)
         deltaATval2 = deltaAT at 0 0 0 (2 * m2)
-    return $ Var { _deltaAT  = deltaATval
-                 , _deltaAT1 = deltaATval1
-                 , _deltaAT2 = deltaATval2 }
+        atTrue = calcAT at 0 0 0 m2
+    return $ Var { _deltaAT1 = deltaATval1
+                 , _deltaAT2 = deltaATval2
+                 , _atTrue   = atTrue }
 
 selectP :: Event -> Maybe (FourMomentum, [FourMomentum])
 selectP ev = do
@@ -78,12 +79,12 @@ printVar h = forever $ do
         case vars of
             Nothing       -> hPutStrLn stderr "failed!"
             Just Var {..} -> C.hPutStrLn h $
-                toExponential 8 _deltaAT
-                <> "  " <> toExponential 8 _deltaAT1
-                <> "  " <> toExponential 8 _deltaAT2
+                toExponential 8 _deltaAT1 <> "  " <> toExponential 8 _deltaAT2
+                <> "  " <> showAT _atTrue
 
 header :: ByteString
 header = BL.pack $ "# " <>
          foldl1 (\v1 v2 -> v1 <> ", " <> v2)
          (zipWith (\n v -> "(" <> show n <> ") " <> v) ([1..] :: [Int])
-             ["deltaAT(true)", "deltaAT(M2/2)", "deltaAT(2*M2)"])
+             [ "deltaAT(M2/2)", "deltaAT(2*M2)"
+             , "deltaAT(true)", "mAT(min)", "mAT(max)" ])
