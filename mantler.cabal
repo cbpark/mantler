@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 22d27cfdbdc25365f784e2aff878544f51a88c874f2fdf15adf2fbeaa9e6e5b8
+-- hash: 3697a5257110edb293696c9fc197a54927ef423740c023866c47b16e2b7c8ffd
 
 name:           mantler
 version:        0.0.0.0
@@ -59,6 +59,25 @@ executable mATLHEF
 
 executable phasespace1
   main-is: phasespace1.hs
+  other-modules:
+      MAT.Helper
+      Paths_mantler
+  hs-source-dirs:
+      src
+  ghc-options: -Wall -Wcompat -O2 -funbox-strict-fields
+  build-depends:
+      base >=4.12.0.0 && <5
+    , bytestring
+    , double-conversion
+    , hep-utilities
+    , mantler
+    , pipes
+    , pipes-bytestring
+    , zlib
+  default-language: Haskell2010
+
+executable phasespace2
+  main-is: phasespace2.hs
   other-modules:
       MAT.Helper
       Paths_mantler

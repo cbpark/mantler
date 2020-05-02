@@ -31,6 +31,17 @@ executables:
       - zlib
       - mantler
 
+  phasespace2:
+    main: phasespace2.hs
+    source-dirs: src
+    dependencies:
+      - bytestring
+      - double-conversion
+      - pipes
+      - pipes-bytestring
+      - zlib
+      - mantler
+
   mATLHEF:
     main: mATLHEF.hs
     source-dirs: src
