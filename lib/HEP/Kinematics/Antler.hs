@@ -43,18 +43,18 @@ visibles ps | length ps == 2 = let [p1, p2] = ps
                                            , _p2 = fourMomentum p2 }
             | otherwise      = NE
 
-sAT :: Antler
-    -> Double  -- ^ - p_{x} component of the ISR
-    -> Double  -- ^ - p_{y} component of the ISR
-    -> Double  -- ^ a guess of the longitudinal momentum of the resonance
-    -> Double  -- ^ the energy of the resonance
-    -> Double
-sAT at qx qy qz e = sAT0 at (setXYZT qx qy qz e)
+deltaAT :: Antler
+        -> Double  -- ^ - p_{x} component of the ISR
+        -> Double  -- ^ - p_{y} component of the ISR
+        -> Double  -- ^ a guess of the longitudinal momentum of the resonance
+        -> Double  -- ^ the energy of the resonance
+        -> Double
+deltaAT at qx qy qz e = deltaAT0 at (setXYZT qx qy qz e)
 
-sAT0 :: Antler
-     -> FourMomentum  -- ^ four-momentum of the heavy resonance
-     -> Double
-sAT0 Antler {..} pRoot =
+deltaAT0 :: Antler
+         -> FourMomentum  -- ^ four-momentum of the heavy resonance
+         -> Double
+deltaAT0 Antler {..} pRoot =
     let qp1 = pRoot `dot` _v1
         qp2 = pRoot `dot` _v2
         qSq = pRoot `dot` pRoot
@@ -110,7 +110,7 @@ mAT :: Antler
 mAT at@Antler{..} qx qy qz
     | _M1sq <= 0 = Nothing
     | otherwise  = do
-          let f = sAT at qx qy qz
+          let f = deltaAT at qx qy qz
               m1 = sqrt _M1sq
 
           (_, sol) <- quarticEqSol f [m1, 10 * m1, 100 * m1, 1000 * m1] 1.0e-3

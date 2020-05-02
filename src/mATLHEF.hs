@@ -54,14 +54,14 @@ main = do
                 putStrLn $ "-- ... Done!\n"
                     <> "-- " <> outfile <> " has been generated."
 
-data Var = Var { -- | sigma_{AT} for true momenta
-                 _sATtrue :: !Double
+data Var = Var { -- | Delta_{AT} for true momenta
+                 _deltaATtrue :: !Double
                  -- | the AT variables for the resonance at rest
-               , _AT0     :: !AT
+               , _AT0         :: !AT
                  -- | the AT variables for the resonance with known p_T
-               , _AT      :: !AT
+               , _AT          :: !AT
                  -- | the longitudinal momentum of the resonance
-               , _Qz      :: !Double
+               , _Qz          :: !Double
                } deriving Show
 
 printVar :: MonadIO m => Handle -> Consumer (Maybe Var) m ()
@@ -70,7 +70,7 @@ printVar h = forever $ do
     liftIO $ case vars of
                  Nothing       -> hPutStrLn stderr "failed!"  -- return ()
                  Just Var {..} -> C.hPutStrLn h $
-                     toExponential 8 _sATtrue
+                     toExponential 8 _deltaATtrue
                      <> "  " <> showAT _AT0
                      <> "  " <> showAT _AT
                      <> "  " <> toFixed 4 _Qz
@@ -90,7 +90,7 @@ calcVar m0 m1 m2 ps = do
         -- of the resonance are known a priori
         atT = calcAT at qx qy 0 (sqrt $ m2 * m2 + qx * qx + qy * qy)
 
-    return $ Var { _sATtrue = sAT0 at pH
+    return $ Var { _deltaATtrue = deltaAT0 at pH
                  , _AT0     = at0
                  , _AT      = atT
                  , _Qz      = qz }
@@ -126,7 +126,7 @@ header :: ByteString
 header = BL.pack $ "# " <>
          foldl1 (\v1 v2 -> v1 <> ", " <> v2)
          (zipWith (\n v -> "(" <> show n <> ") " <> v) ([1..] :: [Int])
-             [ "sATtrue"
-             , "sAT(0)", "mATmin(0)", "mATmax(0)"
-             , "sAT(QT)", "mATmin(QT)", "mATmax(QT)"
+             [ "deltaATtrue"
+             , "deltaAT(0)", "mATmin(0)", "mATmax(0)"
+             , "deltaAT(QT)", "mATmin(QT)", "mATmax(QT)"
              , "Qz" ])
