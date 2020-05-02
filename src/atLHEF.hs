@@ -40,7 +40,7 @@ main = do
             runEffect $ getLHEFEvent fromLazy events
             >-> P.map (calcVar 80.379 173.0 800)
             -- >-> P.map (calcVar 0 173.0 800)
-            >-> P.take 3
+            >-> P.take 10
             >-> printVar h
 
     if lenArg == 1
@@ -56,9 +56,7 @@ main = do
 
 data Var = Var { -- | Delta_{AT} for true momenta
                  _deltaATtrue :: !Double
-                 -- | the AT variables for the resonance at rest
-               , _AT0         :: !AT
-                 -- | the AT variables for the resonance with known p_T
+                 -- | the AT variables for the resonance
                , _AT          :: !AT
                  -- | the longitudinal momentum of the resonance
                , _Qz          :: !Double
@@ -71,9 +69,7 @@ printVar h = forever $ do
                  Nothing       -> hPutStrLn stderr "failed!"  -- return ()
                  Just Var {..} -> C.hPutStrLn h $
                      toExponential 8 _deltaATtrue
-                     <> "  " <> showAT _AT0
-                     <> "  " <> showAT _AT
-                     <> "  " <> toFixed 4 _Qz
+                     <> "  " <> showAT _AT <> "  " <> toFixed 4 _Qz
 
 calcVar :: Double -> Double -> Double -> Event -> Maybe Var
 calcVar m0 m1 m2 ps = do
@@ -82,18 +78,10 @@ calcVar m0 m1 m2 ps = do
     let qx = px pH
         qy = py pH
         qz = pz pH
-
-        -- assuming that the resonance was produced at rest
-        at0 = calcAT at 0 0 0 m2
-
-        -- assuming that the transverse momenta
-        -- of the resonance are known a priori
         atT = calcAT at qx qy 0 (sqrt $ m2 * m2 + qx * qx + qy * qy)
-
     return $ Var { _deltaATtrue = deltaAT0 at pH
-                 , _AT0     = at0
-                 , _AT      = atT
-                 , _Qz      = qz }
+                 , _AT          = atT
+                 , _Qz          = qz }
 
 selectP :: Event -> Maybe (FourMomentum, [FourMomentum])
 selectP ev = do
@@ -127,6 +115,5 @@ header = BL.pack $ "# " <>
          foldl1 (\v1 v2 -> v1 <> ", " <> v2)
          (zipWith (\n v -> "(" <> show n <> ") " <> v) ([1..] :: [Int])
              [ "deltaATtrue"
-             , "deltaAT(0)", "mATmin(0)", "mATmax(0)"
              , "deltaAT(QT)", "mATmin(QT)", "mATmax(QT)"
              , "Qz" ])

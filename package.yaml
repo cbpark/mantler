@@ -42,8 +42,8 @@ executables:
       - zlib
       - mantler
 
-  mATLHEF:
-    main: mATLHEF.hs
+  atLHEF:
+    main: atLHEF.hs
     source-dirs: src
     dependencies:
       - bytestring
