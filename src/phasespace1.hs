@@ -4,7 +4,6 @@
 module Main where
 
 import           HEP.Kinematics.Antler
-import           MAT.Helper
 
 import           HEP.Data.LHEF
 
@@ -12,6 +11,7 @@ import           Codec.Compression.GZip            (decompress)
 import qualified Data.ByteString.Char8             as C
 import           Data.ByteString.Lazy.Char8        (ByteString)
 import qualified Data.ByteString.Lazy.Char8        as BL
+import           Data.Double.Conversion.ByteString (toExponential)
 
 import           Pipes
 import           Pipes.ByteString                  (fromLazy)
@@ -43,21 +43,21 @@ main = do
 
     putStrLn $ "-- ... Done!\n" <> "-- " <> outfile <> " has been generated."
 
-data Var = Var { _AT0 :: AT  -- ^ the AT variables for M2 = M2(true)
-               , _AT1 :: AT  -- ^ the AT variables for M2 = M2(true) / 2
-               , _AT2 :: AT  -- ^ the AT variables for M2 = 2 * M2(true)
+data Var = Var { _sAT  :: !Double  -- ^ the AT variable for M2 = M2(true)
+               , _sAT1 :: !Double -- ^ the AT variables for M2 = M2(true) / 2
+               , _sAT2 :: !Double -- ^ the AT variables for M2 = 2 * M2(true)
                } deriving Show
 
 calcVar :: Double -> Double -> Double -> Event -> Maybe Var
 calcVar m0 m1 m2 ps = do
     (_, pBs) <- selectP ps
     at <- mkAntler m0 m1 (visibles pBs)
-    let at0 = calcAT at 0 0 0 m2
-        at1 = calcAT at 0 0 0 (0.5 * m2)
-        at2 = calcAT at 0 0 0 (2   * m2)
-    return $ Var { _AT0 = at0
-                 , _AT1 = at1
-                 , _AT2 = at2 }
+    let sATval  = sAT at 0 0 0 m2
+        sATval1 = sAT at 0 0 0 (m2 / 2)
+        sATval2 = sAT at 0 0 0 (2 * m2)
+    return $ Var { _sAT  = sATval
+                 , _sAT1 = sATval1
+                 , _sAT2 = sATval2 }
 
 selectP :: Event -> Maybe (FourMomentum, [FourMomentum])
 selectP ev = do
@@ -78,13 +78,12 @@ printVar h = forever $ do
         case vars of
             Nothing       -> hPutStrLn stderr "failed!"
             Just Var {..} -> C.hPutStrLn h $
-                showAT _AT0 <> "  " <> showAT _AT1 <> "  " <> showAT _AT2
+                toExponential 8 _sAT
+                <> "  " <> toExponential 8 _sAT1
+                <> "  " <> toExponential 8 _sAT2
 
 header :: ByteString
 header = BL.pack $ "# " <>
          foldl1 (\v1 v2 -> v1 <> ", " <> v2)
          (zipWith (\n v -> "(" <> show n <> ") " <> v) ([1..] :: [Int])
-             [ "sAT(true)", "mATmin(true)", "mATmax(true)"
-             , "sAT(M2/2)", "mATmin(M2/2)", "mATmax(M2/2)"
-             , "sAT(2*M2)", "mATmin(2*M2)", "mATmax(2*M2)"
-             ])
+             ["sAT(true)", "sAT(M2/2)", "sAT(2*M2)"])

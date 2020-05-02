@@ -20,8 +20,8 @@ library:
   dependencies: hmatrix-gsl
 
 executables:
-  phasespace:
-    main: phasespace.hs
+  phasespace1:
+    main: phasespace1.hs
     source-dirs: src
     dependencies:
       - bytestring
