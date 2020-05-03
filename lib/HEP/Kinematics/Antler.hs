@@ -8,6 +8,8 @@ import HEP.Kinematics
 import HEP.Kinematics.Variable             (mT2Symm, maosMomentaSymmetric)
 import HEP.Kinematics.Vector.LorentzVector (setXYZT)
 
+import Data.List                           (nub)
+
 -- import Debug.Trace
 
 data Antler = Antler { _M0sq  :: !Double        -- ^ m_C^2
@@ -144,8 +146,9 @@ mATMAOS at@Antler{..} qx qy ptmiss = do
 
         pzVisSum = pz _v1 + pz _v2
         -- pzVisSum = trace ("pzVisSum = " ++ show pzVisSum') pzVisSum'
-        qzSols = (+ pzVisSum) <$> zipWith (+) pzChi1s pzChi2s
-                  <> zipWith (+) pzChi1s (reverse pzChi2s)
+        -- it may contain duplicates due to degenerate solutions
+        qzSols = nub $ (+ pzVisSum) <$> zipWith (+) pzChi1s pzChi2s
+                 <> zipWith (+) pzChi1s (reverse pzChi2s)
         -- qzSols = trace ("qz = " ++ show qzSols') qzSols'
 
     if null qzSols                              -- if no MAOS solutions
@@ -160,5 +163,5 @@ mATMAOS at@Antler{..} qx qy ptmiss = do
                 return (mAT1, mAT2, mT2)
 
 tuplesToList :: [(a, a)] -> [a]
-tuplesToList []          = []
-tuplesToList ((a, b):xs) = a : b : tuplesToList xs
+tuplesToList []            = []
+tuplesToList ((x0, x1):xs) = x0 : x1 : tuplesToList xs
