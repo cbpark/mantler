@@ -95,6 +95,7 @@ selectP ev = do
     topQuarks = ParticleType [6]
     isBquark = (== 5) . abs . idOf
 
+{-
 selectP' :: Event -> Maybe (FourMomentum, [FourMomentum])
 selectP' ev = do
     let topChild = particlesFrom topQuarks (eventEntry ev)
@@ -107,11 +108,12 @@ selectP' ev = do
   where
     topQuarks = ParticleType [6]
     isNeutrino = (`elem` neutrinos) . idOf
+-}
 
 header :: ByteString
 header = BL.pack $ "# " <>
          foldl1 (\v1 v2 -> v1 <> ", " <> v2)
          (zipWith (\n v -> "(" <> show n <> ") " <> v) ([1..] :: [Int])
              [ "deltaATtrue"
-             , "deltaAT(QT)", "mATmin(QT)", "mATmax(QT)"
+             , "deltaAT(0)", "mATmin(0)", "mATmax(0)"
              , "Qz" ])
