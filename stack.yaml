@@ -4,5 +4,6 @@ packages:
 - .
 
 extra-deps:
-- git: git@github.com:cbpark/hep-utilities.git
-  commit: f9018732c385df4ae26e5a3c94ee351283a3bed9
+# - git: git@github.com:cbpark/hep-utilities.git
+#   commit: f9018732c385df4ae26e5a3c94ee351283a3bed9
+- ../hep-utilities

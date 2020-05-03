@@ -5,6 +5,7 @@ module HEP.Kinematics.Antler where
 import HEP.Util
 
 import HEP.Kinematics
+import HEP.Kinematics.Variable             (mT2Symm, maosMomentaSymmetric)
 import HEP.Kinematics.Vector.LorentzVector (setXYZT)
 
 -- import Debug.Trace
@@ -124,3 +125,40 @@ mAT at@Antler{..} qx qy qz
                              , sqrt0 $ eT2 * eT2 - pSq )
     where
       sqrt0 x = if x < 0 then 1.0e+10 else sqrt x
+
+mATMAOS :: Antler
+        -> Double                          -- ^ - p_{x} component of the ISR
+        -> Double                          -- ^ - p_{y} component of the ISR
+        -> TransverseMomentum              -- ^ MET
+        -> Maybe (Double, Double, Double)  -- ^ (min(M_{AT}), max(M_{AT}), MT2)
+mATMAOS at@Antler{..} qx qy ptmiss = do
+    let m0 = sqrt _M0sq
+        m1 = sqrt _M1sq
+        mT2 = mT2Symm _v1 _v2 ptmiss m0
+        (chi1s, chi2s, _) = maosMomentaSymmetric mT2 _v1 _v2 ptmiss m1 m0
+        -- chi1s = trace ("chi1s = " ++ show chi1s') chi1s'
+        -- chi2s = trace ("chi2s = " ++ show chi2s') chi2s'
+        (pzChi1s, pzChi2s) = (map pz chi1s, map pz chi2s)
+        -- pzChi1s = trace ("pzChi1s = " ++ show pzChi1s') pzChi1s'
+        -- pzChi2s = trace ("pzChi2s = " ++ show pzChi2s') pzChi2s'
+
+        pzVisSum = pz _v1 + pz _v2
+        -- pzVisSum = trace ("pzVisSum = " ++ show pzVisSum') pzVisSum'
+        qzSols = (+ pzVisSum) <$> zipWith (+) pzChi1s pzChi2s
+                  <> zipWith (+) pzChi1s (reverse pzChi2s)
+        -- qzSols = trace ("qz = " ++ show qzSols') qzSols'
+
+    if null qzSols                              -- if no MAOS solutions
+        then do (mAT1, mAT2) <- mAT at qx qy 0  -- then set Qz = 0
+                return (mAT1, mAT2, mT2)
+        else do mATs <- tuplesToList <$> mapM (mAT at qx qy) qzSols
+                -- let mATs = trace ("mATs = " ++ show mATs') mATs'
+                let mAT1 = minimum mATs
+                    -- mAT1 = trace ("mAT1 = " ++ show mAT1') mAT1'
+                    mAT2 = maximum mATs
+                    -- mAT2 = trace ("mAT2 = " ++ show mAT2') mAT2'
+                return (mAT1, mAT2, mT2)
+
+tuplesToList :: [(a, a)] -> [a]
+tuplesToList []          = []
+tuplesToList ((a, b):xs) = a : b : tuplesToList xs

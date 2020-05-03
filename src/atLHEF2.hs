@@ -5,8 +5,9 @@ module Main where
 
 import           HEP.Kinematics.Antler
 import           MAT.Helper
-
+-- hep-utilities
 import           HEP.Data.LHEF
+import           HEP.Kinematics.Vector.TwoVector   (setXY)
 
 import           Codec.Compression.GZip            (decompress)
 import qualified Data.ByteString.Char8             as C
@@ -17,7 +18,7 @@ import           Data.Double.Conversion.ByteString
 import           Pipes
 import           Pipes.ByteString                  (fromLazy)
 import qualified Pipes.Prelude                     as P
-
+--
 import           Control.Monad                     (forever, unless)
 import           System.Environment                (getArgs)
 import           System.Exit                       (die)
@@ -30,7 +31,7 @@ main = do
     args <- getArgs
     let lenArg = length args
     unless (lenArg == 1 || lenArg == 2) $
-        die "-- Usage: mATLHEF <LHEF file gzipped> [output]"
+        die "-- Usage: atLHEF2 <LHEF file gzipped> [output]"
 
     let lheFile = head args
     putStrLn $ "-- The input LHEF file is " <> lheFile <> "."
@@ -56,47 +57,61 @@ main = do
 
 data Var = Var { -- | Delta_{AT} for true momenta
                  _deltaATtrue :: !Double
-                 -- | the AT variables for the resonance
-               , _AT          :: !AT
-                 -- | the longitudinal momentum of the resonance
-               , _Qz          :: !Double
+                 -- | the AT variables for the resonance (Q = 0)
+               , _AT0         :: !AT
+                 -- | M_{AT} using the MAOS solutions
+               , _mAT1        :: !Double
+               , _mAT2        :: !Double
+                 -- | M_{T2}
+               , _mT2         :: !Double
                } deriving Show
 
 printVar :: MonadIO m => Handle -> Consumer (Maybe Var) m ()
 printVar h = forever $ do
     vars <- await
     liftIO $ case vars of
-                 Nothing       -> hPutStrLn stderr "failed!"  -- return ()
+                 Nothing       -> return ()  -- hPutStrLn stderr "failed!"
                  Just Var {..} -> C.hPutStrLn h $
                      toExponential 8 _deltaATtrue
-                     <> "  " <> showAT _AT <> "  " <> toFixed 4 _Qz
+                     <> "  " <> showAT _AT0
+                     <> "  " <> toFixed 4 _mAT1
+                     <> "  " <> toFixed 4 _mAT2
+                     <> "  " <> toFixed 4 _mT2
 
 calcVar :: Double -> Double -> Double -> Event -> Maybe Var
 calcVar m0 m1 m2 ps = do
-    (pH, pBs) <- selectP ps
+    (pH, pBs, ptmiss) <- selectP ps
     at <- mkAntler m0 m1 (visibles pBs)
     let qx = px pH
         qy = py pH
-        qz = pz pH
-        atT = calcAT at qx qy 0 (sqrt $ m2 * m2 + qx * qx + qy * qy)
-    return $ Var { _deltaATtrue = deltaAT0 at pH
-                 , _AT          = atT
-                 , _Qz          = qz }
+        at0 = calcAT at qx qy 0 m2
 
-selectP :: Event -> Maybe (FourMomentum, [FourMomentum])
+    (mAT1, mAT2, mT2) <- mATMAOS at qx qy ptmiss
+
+    return $ Var { _deltaATtrue = deltaAT0 at pH
+                 , _AT0         = at0
+                 , _mAT1        = mAT1
+                 , _mAT2        = mAT2
+                 , _mT2         = mT2 }
+
+selectP :: Event -> Maybe (FourMomentum, [FourMomentum], TransverseMomentum)
 selectP ev = do
     let topChild = particlesFrom topQuarks (eventEntry ev)
     if null topChild
         then Nothing
         else do let pH = momentumSum $ fourMomentum <$> concat topChild
-                    pB = fourMomentum <$> concat (filter isBquark <$> topChild)
-                return (pH, pB)
+                    pBs = fourMomentum <$> concat (filter isBquark <$> topChild)
+                    pW = momentumSum $
+                         fourMomentum <$> concat (filter isWboson <$> topChild)
+                    ptmiss = setXY (px pW) (py pW)
+                return (pH, pBs, ptmiss)
   where
     topQuarks = ParticleType [6]
     isBquark = (== 5) . abs . idOf
+    isWboson = (== 24) . abs . idOf
 
 {-
-selectP' :: Event -> Maybe (FourMomentum, [FourMomentum])
+selectP' :: Event -> Maybe (FourMomentum, [FourMomentum], TransverseMomentum)
 selectP' ev = do
     let topChild = particlesFrom topQuarks (eventEntry ev)
     if null topChild
@@ -104,7 +119,10 @@ selectP' ev = do
         else do let pH = momentumSum $ fourMomentum <$> concat topChild
                     pV = momentumSum . fmap fourMomentum <$>
                         (filter (not . isNeutrino) <$> topChild)
-                return (pH, pV)
+                    pNu = momentumSum (momentumSum . fmap fourMomentum <$>
+                          (filter isNeutrino <$> topChild))
+                    ptmiss = setXY (px pNu) (py pNu)
+                return (pH, pV, ptmiss)
   where
     topQuarks = ParticleType [6]
     isNeutrino = (`elem` neutrinos) . idOf
@@ -115,5 +133,5 @@ header = BL.pack $ "# " <>
          foldl1 (\v1 v2 -> v1 <> ", " <> v2)
          (zipWith (\n v -> "(" <> show n <> ") " <> v) ([1..] :: [Int])
              [ "deltaATtrue"
-             , "deltaAT(QT)", "mATmin(QT)", "mATmax(QT)"
-             , "Qz" ])
+             , "deltaAT(0)", "mATmin(0)", "mATmax(0)"
+             , "mATmin(maos)", "mATmax(maos)", "mT2" ])
