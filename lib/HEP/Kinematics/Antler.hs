@@ -129,9 +129,9 @@ mAT at@Antler{..} qx qy qz
       sqrt0 x = if x < 0 then 1.0e+10 else sqrt x
 
 mATMAOS :: Antler
-        -> Double                          -- ^ - p_{x} component of the ISR
-        -> Double                          -- ^ - p_{y} component of the ISR
-        -> TransverseMomentum              -- ^ MET
+        -> Double                            -- ^ - p_{x} component of the ISR
+        -> Double                            -- ^ - p_{y} component of the ISR
+        -> TransverseMomentum                -- ^ MET
         -> Maybe (Double, Double, Double)  -- ^ (min(M_{AT}), max(M_{AT}), MT2)
 mATMAOS at@Antler{..} qx qy ptmiss = do
     let m0 = sqrt _M0sq

@@ -4,7 +4,7 @@
 module Main where
 
 import           HEP.Kinematics.Antler
-import           MAT.Helper
+import           MAT.Helper                        as MH
 -- hep-utilities
 import           HEP.Data.LHEF
 import           HEP.Kinematics.Vector.TwoVector   (setXY)
@@ -41,7 +41,7 @@ main = do
             runEffect $ getLHEFEvent fromLazy events
             >-> P.map (calcVar 80.379 173.0 800)
             -- >-> P.map (calcVar 0 173.0 800)
-            -- >-> P.take 10
+            -- >-> P.take 100
             >-> printVar h
 
     if lenArg == 1
@@ -86,13 +86,19 @@ calcVar m0 m1 m2 ps = do
         qy = py pH
         at0 = calcAT at qx qy 0 m2
 
-    (mAT1, mAT2, mT2) <- mATMAOS at qx qy ptmiss
-
-    return $ Var { _deltaATtrue = deltaAT0 at pH
-                 , _AT0         = at0
-                 , _mAT1        = mAT1
-                 , _mAT2        = mAT2
-                 , _mT2         = mT2 }
+    return $
+        case mATMAOS at qx qy ptmiss of
+            Nothing -> Var { _deltaATtrue = deltaAT0 at pH
+                           , _AT0         = at0
+                           , _mAT1        = MH._mAT1 at0
+                           , _mAT2        = MH._mAT2 at0
+                           , _mT2         = 0
+                           }
+            Just (mAT1, mAT2, mT2) -> Var { _deltaATtrue = deltaAT0 at pH
+                                          , _AT0         = at0
+                                          , _mAT1        = mAT1
+                                          , _mAT2        = mAT2
+                                          , _mT2         = mT2 }
 
 selectP :: Event -> Maybe (FourMomentum, [FourMomentum], TransverseMomentum)
 selectP ev = do
