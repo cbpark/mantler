@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: ac3079e72e4923241aefc31e1b8836b4af4e6ccea852f67f26eab9741799d5ea
+-- hash: 1c2081040fad234f50e654bde25518491644577e99166bec5be0a080594458dd
 
 name:           mantler
 version:        0.0.0.0
@@ -64,7 +64,7 @@ executable atLHEF2
       Paths_mantler
   hs-source-dirs:
       src
-  ghc-options: -Wall -Wcompat -O2 -funbox-strict-fields
+  ghc-options: -Wall -Wcompat -O2 -funbox-strict-fields -threaded
   build-depends:
       base >=4.12.0.0 && <5
     , bytestring

@@ -56,6 +56,7 @@ executables:
   atLHEF2:
     main: atLHEF2.hs
     source-dirs: src
+    ghc-options: -threaded
     dependencies:
       - bytestring
       - double-conversion
