@@ -64,6 +64,7 @@ data Var = Var { -- | Delta_{AT} for true momenta
                , _mAT2        :: !Double
                  -- | M_{T2}
                , _mT2         :: !Double
+               , _Qz          :: !Double
                } deriving Show
 
 printVar :: MonadIO m => Handle -> Consumer (Maybe Var) m ()
@@ -77,13 +78,13 @@ printVar h = forever $ do
                      <> "  " <> toFixed 4 _mAT1
                      <> "  " <> toFixed 4 _mAT2
                      <> "  " <> toFixed 4 _mT2
+                     <> "  " <> toFixed 4 _Qz
 
 calcVar :: Double -> Double -> Double -> Event -> Maybe Var
 calcVar m0 m1 m2 ps = do
     (pH, pBs, ptmiss) <- selectP ps
     at <- mkAntler m0 m1 (visibles pBs)
-    let qx = px pH
-        qy = py pH
+    let (qx, qy, qz) = pxpypz pH
         at0 = calcAT at qx qy 0 m2
 
     return $
@@ -93,12 +94,13 @@ calcVar m0 m1 m2 ps = do
                            , _mAT1        = MH._mAT1 at0
                            , _mAT2        = MH._mAT2 at0
                            , _mT2         = 0
-                           }
+                           , _Qz          = qz }
             Just (mAT1, mAT2, mT2) -> Var { _deltaATtrue = deltaAT0 at pH
                                           , _AT0         = at0
                                           , _mAT1        = mAT1
                                           , _mAT2        = mAT2
-                                          , _mT2         = mT2 }
+                                          , _mT2         = mT2
+                                          , _Qz          = qz }
 
 selectP :: Event -> Maybe (FourMomentum, [FourMomentum], TransverseMomentum)
 selectP ev = do
@@ -140,4 +142,5 @@ header = BL.pack $ "# " <>
          (zipWith (\n v -> "(" <> show n <> ") " <> v) ([1..] :: [Int])
              [ "deltaATtrue"
              , "deltaAT(0)", "mATmin(0)", "mATmax(0)"
-             , "mATmin(maos)", "mATmax(maos)", "mT2" ])
+             , "mATmin(maos)", "mATmax(maos)", "mT2"
+             , "Qz" ])
