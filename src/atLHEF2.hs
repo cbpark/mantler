@@ -102,19 +102,19 @@ calcVar m0 m1 m2 ps = do
 
 selectP :: Event -> Maybe (FourMomentum, [FourMomentum], TransverseMomentum)
 selectP ev = do
-    let topChild = particlesFrom topQuarks (eventEntry ev)
+    let [topChild, wChild] = flip particlesFrom (eventEntry ev) <$>
+                             [topQuarks, wBosons]
     if null topChild
         then Nothing
-        else do let pH = momentumSum $ fourMomentum <$> concat topChild
+        else do let pH  = momentumSum $ fourMomentum <$> concat topChild
                     pBs = fourMomentum <$> concat (filter isBquark <$> topChild)
-                    pW = momentumSum $
-                         fourMomentum <$> concat (filter isWboson <$> topChild)
-                    ptmiss = setXY (px pW) (py pW)
+                    pWW = momentumSum $ fourMomentum <$> concat wChild
+                    ptmiss = setXY (px pWW) (py pWW)
                 return (pH, pBs, ptmiss)
   where
     topQuarks = ParticleType [6]
+    wBosons   = ParticleType [24]
     isBquark = (== 5) . abs . idOf
-    isWboson = (== 24) . abs . idOf
 
 {-
 selectP' :: Event -> Maybe (FourMomentum, [FourMomentum], TransverseMomentum)

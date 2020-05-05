@@ -1,3 +1,4 @@
+{-# LANGUAGE BangPatterns    #-}
 {-# LANGUAGE RecordWildCards #-}
 
 module HEP.Kinematics.Antler where
@@ -12,8 +13,8 @@ import Data.List                           (nub)
 
 -- import Debug.Trace
 
-data Antler = Antler { _M0sq  :: !Double        -- ^ m_C^2
-                     , _M1sq  :: !Double        -- ^ m_B^2
+data Antler = Antler { _M0sq  :: !Double        -- ^ m_B^2
+                     , _M1sq  :: !Double        -- ^ m_A^2
                      , _mV1sq :: !Double        -- ^ p1^2 = m_{v1}^2
                      , _mV2sq :: !Double        -- ^ p2^2 = m_{v2}^2
                      , _v1    :: !FourMomentum  -- ^ p1
@@ -137,29 +138,21 @@ mATMAOS at@Antler{..} qx qy ptmiss = do
     let m0 = sqrt _M0sq
         m1 = sqrt _M1sq
         mT2 = mT2Symm _v1 _v2 ptmiss m0
+
         (chi1s, chi2s, _) = maosMomentaSymmetric mT2 _v1 _v2 ptmiss m1 m0
-        -- chi1s = trace ("chi1s = " ++ show chi1s') chi1s'
-        -- chi2s = trace ("chi2s = " ++ show chi2s') chi2s'
-        (pzChi1s, pzChi2s) = (map pz chi1s, map pz chi2s)
-        -- pzChi1s = trace ("pzChi1s = " ++ show pzChi1s') pzChi1s'
-        -- pzChi2s = trace ("pzChi2s = " ++ show pzChi2s') pzChi2s'
+        (!pzChi1s, !pzChi2s) = (map pz chi1s, map pz chi2s)
 
         pzVisSum = pz _v1 + pz _v2
-        -- pzVisSum = trace ("pzVisSum = " ++ show pzVisSum') pzVisSum'
         -- it may contain duplicates due to degenerate solutions
         qzSols = nub $ (+ pzVisSum) <$> zipWith (+) pzChi1s pzChi2s
                  <> zipWith (+) pzChi1s (reverse pzChi2s)
-        -- qzSols = trace ("qz = " ++ show qzSols') qzSols'
 
     if null qzSols                              -- if no MAOS solutions
         then do (mAT1, mAT2) <- mAT at qx qy 0  -- then set Qz = 0
                 return (mAT1, mAT2, mT2)
         else do mATs <- tuplesToList <$> mapM (mAT at qx qy) qzSols
-                -- let mATs = trace ("mATs = " ++ show mATs') mATs'
                 let mAT1 = minimum mATs
-                    -- mAT1 = trace ("mAT1 = " ++ show mAT1') mAT1'
                     mAT2 = maximum mATs
-                    -- mAT2 = trace ("mAT2 = " ++ show mAT2') mAT2'
                 return (mAT1, mAT2, mT2)
 
 tuplesToList :: [(a, a)] -> [a]
