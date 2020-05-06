@@ -1,4 +1,4 @@
-{-# LANGUAGE BangPatterns    #-}
+{-# LANGUAGE MultiWayIf      #-}
 {-# LANGUAGE RecordWildCards #-}
 
 module HEP.Kinematics.Antler where
@@ -6,10 +6,11 @@ module HEP.Kinematics.Antler where
 import HEP.Util
 
 import HEP.Kinematics
-import HEP.Kinematics.Variable             (mT2Symm, maosMomentaSymmetric)
-import HEP.Kinematics.Vector.LorentzVector (setXYZT)
+import HEP.Kinematics.Variable              (mT2Symm, maosMomentaSymmetric)
+import HEP.Kinematics.Vector.LorentzTVector (setXYT)
+import HEP.Kinematics.Vector.LorentzVector  (setXYZT)
 
-import Data.List                           (nub)
+import Data.List                            (nub)
 
 -- import Debug.Trace
 
@@ -107,8 +108,8 @@ deltaAT0 Antler {..} pRoot =
         - det m5 * det m5' + det m6 * det m6'
 
 mAT :: Antler
-    -> Double  -- ^ - p_{x} component of the ISR
-    -> Double  -- ^ - p_{y} component of the ISR
+    -> Double  -- ^ Q_{x}
+    -> Double  -- ^ Q_{y}
     -> Double  -- ^ a guess of the longitudinal momentum of the resonance
     -> Maybe (Double, Double)
 mAT at@Antler{..} qx qy qz
@@ -129,32 +130,42 @@ mAT at@Antler{..} qx qy qz
     where
       sqrt0 x = if x < 0 then 1.0e+10 else sqrt x
 
+-- | returns (min(M_{AT}), max(M_{AT}), m_{MAOS}, MTtrue, MT2).
+--
+-- m_{MAOS} is a 4-dim list.
 mATMAOS :: Antler
-        -> Double                            -- ^ - p_{x} component of the ISR
-        -> Double                            -- ^ - p_{y} component of the ISR
-        -> TransverseMomentum                -- ^ MET
-        -> Maybe (Double, Double, Double)  -- ^ (min(M_{AT}), max(M_{AT}), MT2)
+        -> Double                                            -- ^ Q_{x}
+        -> Double                                            -- ^ Q_{y}
+        -> TransverseMomentum                                -- ^ MET
+        -> Maybe (Double, Double, [Double], Double, Double)
 mATMAOS at@Antler{..} qx qy ptmiss = do
     let m0 = sqrt _M0sq
         m1 = sqrt _M1sq
+        pChiT = setXYT (px ptmiss) (py ptmiss) (norm ptmiss)
+        mTtrue = transverseMass [_v1, _v2] pChiT
+
         mT2 = mT2Symm _v1 _v2 ptmiss m0
-
         (chi1s, chi2s, _) = maosMomentaSymmetric mT2 _v1 _v2 ptmiss m1 m0
-        (!pzChi1s, !pzChi2s) = (map pz chi1s, map pz chi2s)
 
-        pzVisSum = pz _v1 + pz _v2
+        pVisSum = _v1 + _v2
         -- it may contain duplicates due to degenerate solutions
-        qzSols = nub $ (+ pzVisSum) <$> zipWith (+) pzChi1s pzChi2s
-                 <> zipWith (+) pzChi1s (reverse pzChi2s)
+        qHs = nub $ (+ pVisSum) <$> zipWith (+) chi1s chi2s
+                 <> zipWith (+) chi1s (reverse chi2s)
 
-    if null qzSols                              -- if no MAOS solutions
+    if null qHs                                 -- if no MAOS solutions
         then do (mAT1, mAT2) <- mAT at qx qy 0  -- then set Qz = 0
-                return (mAT1, mAT2, mT2)
-        else do mATs <- tuplesToList <$> mapM (mAT at qx qy) qzSols
+                return (mAT1, mAT2, [0, 0, 0, 0], mTtrue, mT2)
+        else do let qzSols = map pz qHs
+                mATs <- tuplesToList <$> mapM (mAT at qx qy) qzSols
                 let mAT1 = minimum mATs
                     mAT2 = maximum mATs
-                return (mAT1, mAT2, mT2)
+                    mMAOS = mkLen4 $ map mass qHs
+                return (mAT1, mAT2, mMAOS, mTtrue, mT2)
 
 tuplesToList :: [(a, a)] -> [a]
 tuplesToList []            = []
 tuplesToList ((x0, x1):xs) = x0 : x1 : tuplesToList xs
+
+mkLen4 :: Num a => [a] -> [a]
+mkLen4 xs | length xs >= 4  = take 4 xs
+          | otherwise       = mkLen4 $! xs <> [0]

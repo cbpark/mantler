@@ -63,6 +63,8 @@ data Var = Var { -- | Delta_{AT} for true momenta
                , _mAT1        :: !Double
                , _mAT2        :: !Double
                  -- | M_{T2}
+               , _mMAOS       :: ![Double]
+               , _mTtrue      :: !Double
                , _mT2         :: !Double
                , _Qz          :: !Double
                } deriving Show
@@ -77,6 +79,8 @@ printVar h = forever $ do
                      <> "  " <> showAT _AT0
                      <> "  " <> toFixed 4 _mAT1
                      <> "  " <> toFixed 4 _mAT2
+                     <> C.unwords (map (\m -> "  " <> toFixed 4 m) _mMAOS)
+                     <> "  " <> toFixed 4 _mTtrue
                      <> "  " <> toFixed 4 _mT2
                      <> "  " <> toFixed 4 _Qz
 
@@ -93,14 +97,19 @@ calcVar m0 m1 m2 ps = do
                            , _AT0         = at0
                            , _mAT1        = MH._mAT1 at0
                            , _mAT2        = MH._mAT2 at0
+                           , _mMAOS       = [0, 0, 0, 0]
+                           , _mTtrue      = 0
                            , _mT2         = 0
                            , _Qz          = qz }
-            Just (mAT1, mAT2, mT2) -> Var { _deltaATtrue = deltaAT0 at pH
-                                          , _AT0         = at0
-                                          , _mAT1        = mAT1
-                                          , _mAT2        = mAT2
-                                          , _mT2         = mT2
-                                          , _Qz          = qz }
+            Just (mAT1, mAT2, mMAOS, mTtrue, mT2) ->
+                Var { _deltaATtrue = deltaAT0 at pH
+                    , _AT0         = at0
+                    , _mAT1        = mAT1
+                    , _mAT2        = mAT2
+                    , _mMAOS       = mMAOS
+                    , _mTtrue      = mTtrue
+                    , _mT2         = mT2
+                    , _Qz          = qz }
 
 selectP :: Event -> Maybe (FourMomentum, [FourMomentum], TransverseMomentum)
 selectP ev = do
@@ -142,5 +151,6 @@ header = BL.pack $ "# " <>
          (zipWith (\n v -> "(" <> show n <> ") " <> v) ([1..] :: [Int])
              [ "deltaATtrue"
              , "deltaAT(0)", "mATmin(0)", "mATmax(0)"
-             , "mATmin(maos)", "mATmax(maos)", "mT2"
-             , "Qz" ])
+             , "mATmin(maos)", "mATmax(maos)"
+             , "mMAOS1", "mMAOS2", "mMAOS3", "mMAOS4"
+             , "mTtrue", "mT2", "Qz" ])
