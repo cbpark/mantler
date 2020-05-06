@@ -26,7 +26,7 @@ calcAT :: Antler
        -> AT
 calcAT at qx qy qz e =
     let deltaATval = deltaAT at qx qy qz e
-    in case mAT at qx qy 0 of
+    in case mAT at qx qy qz of
            Nothing           -> AT deltaATval 0 0
            Just (mAT1, mAT2) -> AT { _deltaAT  = deltaATval
                                    , _mAT1 = mAT1

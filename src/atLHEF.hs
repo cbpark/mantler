@@ -31,7 +31,7 @@ main = do
     args <- getArgs
     let lenArg = length args
     unless (lenArg == 1 || lenArg == 2) $
-        die "-- Usage: atLHEF2 <LHEF file gzipped> [output]"
+        die "-- Usage: atLHEF <LHEF file gzipped> [output]"
 
     let lheFile = head args
     putStrLn $ "-- The input LHEF file is " <> lheFile <> "."
@@ -39,8 +39,8 @@ main = do
 
     let writeOutput h =
             runEffect $ getLHEFEvent fromLazy events
-            >-> P.map (calcVar 80.379 173.0 800)
-            -- >-> P.map (calcVar 0 173.0 800)
+            -- >-> P.map (calcVar 80.379 173.0 800)
+            >-> P.map (calcVar 0 173.0 800)
             -- >-> P.take 100
             >-> printVar h
 
@@ -104,23 +104,6 @@ calcVar m0 m1 m2 ps = do
 
 selectP :: Event -> Maybe (FourMomentum, [FourMomentum], TransverseMomentum)
 selectP ev = do
-    let [topChild, wChild] = flip particlesFrom (eventEntry ev) <$>
-                             [topQuarks, wBosons]
-    if null topChild
-        then Nothing
-        else do let pH  = momentumSum $ fourMomentum <$> concat topChild
-                    pBs = fourMomentum <$> concat (filter isBquark <$> topChild)
-                    pWW = momentumSum $ fourMomentum <$> concat wChild
-                    ptmiss = setXY (px pWW) (py pWW)
-                return (pH, pBs, ptmiss)
-  where
-    topQuarks = ParticleType [6]
-    wBosons   = ParticleType [24]
-    isBquark = (== 5) . abs . idOf
-
-{-
-selectP' :: Event -> Maybe (FourMomentum, [FourMomentum], TransverseMomentum)
-selectP' ev = do
     let topChild = particlesFrom topQuarks (eventEntry ev)
     if null topChild
         then Nothing
@@ -134,6 +117,23 @@ selectP' ev = do
   where
     topQuarks = ParticleType [6]
     isNeutrino = (`elem` neutrinos) . idOf
+
+{-
+selectP :: Event -> Maybe (FourMomentum, [FourMomentum], TransverseMomentum)
+selectP ev = do
+    let [topChild, wChild] = flip particlesFrom (eventEntry ev) <$>
+                             [topQuarks, wBosons]
+    if null topChild
+        then Nothing
+        else do let pH  = momentumSum $ fourMomentum <$> concat topChild
+                    pBs = fourMomentum <$> concat (filter isBquark <$> topChild)
+                    pWW = momentumSum $ fourMomentum <$> concat wChild
+                    ptmiss = setXY (px pWW) (py pWW)
+                return (pH, pBs, ptmiss)
+  where
+    topQuarks = ParticleType [6]
+    wBosons   = ParticleType [24]
+    isBquark = (== 5) . abs . idOf
 -}
 
 header :: ByteString

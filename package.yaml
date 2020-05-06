@@ -42,19 +42,8 @@ executables:
       - zlib
       - mantler
 
-  atLHEF1:
-    main: atLHEF1.hs
-    source-dirs: src
-    dependencies:
-      - bytestring
-      - double-conversion
-      - pipes
-      - pipes-bytestring
-      - zlib
-      - mantler
-
-  atLHEF2:
-    main: atLHEF2.hs
+  atLHEF:
+    main: atLHEF.hs
     source-dirs: src
     ghc-options: -threaded
     dependencies:

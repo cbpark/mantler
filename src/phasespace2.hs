@@ -37,7 +37,8 @@ main = do
         BL.hPutStrLn h header
         putStrLn "-- Calculating the event variables ..."
         runEffect $ getLHEFEvent fromLazy events
-            >-> P.map (calcVar 80.379 173.0 800)
+            -- >-> P.map (calcVar 80.379 173.0 800)
+            >-> P.map (calcVar 0 173.0 800)
             -- >-> P.take 3
             >-> printVar h
 
@@ -51,12 +52,26 @@ calcVar :: Double -> Double -> Double -> Event -> Maybe Var
 calcVar m0 m1 m2 ps = do
     (pH, pBs) <- selectP ps
     at <- mkAntler m0 m1 (visibles pBs)
-    let qx = px pH
-        qy = py pH
-        at0 = calcAT at 0  0  0 m2
-        at1 = calcAT at qx qy 0 (sqrt $ m2 * m2 + qx * qx + qy * qy)
+    let (qx, qy, qz) = pxpypz pH
+        qTsq = qx * qx + qy * qy
+        at0 = calcAT at qx qy 0  (sqrt $ m2 * m2 + qTsq)
+        at1 = calcAT at qx qy qz (sqrt $ m2 * m2 + qTsq + qz * qz)
     return $ Var at0 at1
 
+selectP :: Event -> Maybe (FourMomentum, [FourMomentum])
+selectP ev = do
+    let topChild = particlesFrom topQuarks (eventEntry ev)
+    if null topChild
+        then Nothing
+        else do let pH = momentumSum $ fourMomentum <$> concat topChild
+                    pVs = momentumSum . fmap fourMomentum <$>
+                          (filter (not . isNeutrino) <$> topChild)
+                return (pH, pVs)
+  where
+    topQuarks = ParticleType [6]
+    isNeutrino = (`elem` neutrinos) . idOf
+
+{-
 selectP :: Event -> Maybe (FourMomentum, [FourMomentum])
 selectP ev = do
     let topChild = particlesFrom topQuarks (eventEntry ev)
@@ -68,6 +83,7 @@ selectP ev = do
   where
     topQuarks = ParticleType [6]
     isBquark = (== 5) . abs . idOf
+-}
 
 printVar :: MonadIO m => Handle -> Consumer (Maybe Var) m ()
 printVar h = forever $ do
@@ -82,4 +98,4 @@ header = BL.pack $ "# " <>
          foldl1 (\v1 v2 -> v1 <> ", " <> v2)
          (zipWith (\n v -> "(" <> show n <> ") " <> v) ([1..] :: [Int])
              [ "deltaAT(0)",  "mAT(min, 0)",  "mAT(max, 0)"
-             , "deltaAT(pT)", "mAT(min, pT)", "mAT(max, pT)" ])
+             , "deltaAT(true)", "mAT(min, true)", "mAT(max, true)" ])

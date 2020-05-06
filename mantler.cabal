@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 1c2081040fad234f50e654bde25518491644577e99166bec5be0a080594458dd
+-- hash: 54cb664e4a426854c2a562961d0673001cc59fed66e599b7c65de43d775c5363
 
 name:           mantler
 version:        0.0.0.0
@@ -38,27 +38,8 @@ library
     , hmatrix-gsl
   default-language: Haskell2010
 
-executable atLHEF1
-  main-is: atLHEF1.hs
-  other-modules:
-      MAT.Helper
-      Paths_mantler
-  hs-source-dirs:
-      src
-  ghc-options: -Wall -Wcompat -O2 -funbox-strict-fields
-  build-depends:
-      base >=4.12.0.0 && <5
-    , bytestring
-    , double-conversion
-    , hep-utilities
-    , mantler
-    , pipes
-    , pipes-bytestring
-    , zlib
-  default-language: Haskell2010
-
-executable atLHEF2
-  main-is: atLHEF2.hs
+executable atLHEF
+  main-is: atLHEF.hs
   other-modules:
       MAT.Helper
       Paths_mantler
