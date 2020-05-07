@@ -137,13 +137,10 @@ mATMAOS :: Antler
         -> Double                                            -- ^ Q_{x}
         -> Double                                            -- ^ Q_{y}
         -> TransverseMomentum                                -- ^ MET
-        -> Maybe (Double, Double, [Double], Double, Double)
+        -> Maybe (Double, Double, [Double], Double)
 mATMAOS at@Antler{..} qx qy ptmiss = do
     let m0 = sqrt _M0sq
         m1 = sqrt _M1sq
-        pChiT = setXYT (px ptmiss) (py ptmiss) (norm ptmiss)
-        mTtrue = transverseMass [_v1, _v2] pChiT
-
         mT2 = mT2Symm _v1 _v2 ptmiss m0
         (chi1s, chi2s, _) = maosMomentaSymmetric mT2 _v1 _v2 ptmiss m1 m0
 
@@ -154,13 +151,18 @@ mATMAOS at@Antler{..} qx qy ptmiss = do
 
     if null qHs                                 -- if no MAOS solutions
         then do (mAT1, mAT2) <- mAT at qx qy 0  -- then set Qz = 0
-                return (mAT1, mAT2, [0, 0, 0, 0], mTtrue, mT2)
+                return (mAT1, mAT2, [0, 0, 0, 0], mT2)
         else do let qzSols = map pz qHs
                 mATs <- tuplesToList <$> mapM (mAT at qx qy) qzSols
                 let mAT1 = minimum mATs
                     mAT2 = maximum mATs
                     mMAOS = mkLen4 $ map mass qHs
-                return (mAT1, mAT2, mMAOS, mTtrue, mT2)
+                return (mAT1, mAT2, mMAOS, mT2)
+
+mTtrue :: Antler -> TransverseMomentum -> Double
+mTtrue Antler {..} ptmiss =
+    let pChiT = setXYT (px ptmiss) (py ptmiss) (norm ptmiss)
+    in transverseMass [_v1, _v2] pChiT
 
 tuplesToList :: [(a, a)] -> [a]
 tuplesToList []            = []

@@ -3,8 +3,10 @@
 
 module Main where
 
-import           HEP.Kinematics.Antler
+import           MAT.Combinatorics                 (correctPairs)
 import           MAT.Helper                        as MH
+
+import           HEP.Kinematics.Antler
 -- hep-utilities
 import           HEP.Data.LHEF
 import           HEP.Kinematics.Vector.TwoVector   (setXY)
@@ -31,7 +33,7 @@ main = do
     args <- getArgs
     let lenArg = length args
     unless (lenArg == 1 || lenArg == 2) $
-        die "-- Usage: atLHEF <LHEF file gzipped> [output]"
+        die "-- Usage: atLHEF2 <LHEF file gzipped> [output]"
 
     let lheFile = head args
     putStrLn $ "-- The input LHEF file is " <> lheFile <> "."
@@ -41,7 +43,7 @@ main = do
             runEffect $ getLHEFEvent fromLazy events
             -- >-> P.map (calcVar 80.379 173.0 800)
             >-> P.map (calcVar 0 173.0 800)
-            -- >-> P.take 100
+            -- >-> P.take 20
             >-> printVar h
 
     if lenArg == 1
@@ -49,108 +51,88 @@ main = do
         else do let outfile = args !! 1
                 withFile outfile WriteMode $ \h -> do
                     BL.hPutStrLn h header
-                    putStrLn "-- Calculating the event variables ..."
+                    putStrLn $ "-- Calculating the event variables"
+                        <> " (with combinatorial errors) ..."
                     writeOutput h
 
                 putStrLn $ "-- ... Done!\n"
                     <> "-- " <> outfile <> " has been generated."
 
-data Var = Var { -- | Delta_{AT} for true momenta
-                 _deltaATtrue :: !Double
-                 -- | the AT variables for the resonance (Q = 0)
-               , _AT0         :: !AT
-                 -- | M_{AT} using the MAOS solutions
+data Var = Var { _AT0         :: !AT
                , _mAT1        :: !Double
                , _mAT2        :: !Double
-                 -- | M_{T2}
                , _mMAOS       :: ![Double]
                , _mTtrue      :: !Double
                , _mT2         :: !Double
-               , _Qz          :: !Double
+               , _correctPair :: !Int
                } deriving Show
 
 printVar :: MonadIO m => Handle -> Consumer (Maybe Var) m ()
 printVar h = forever $ do
     vars <- await
     liftIO $ case vars of
-                 Nothing       -> return ()  -- hPutStrLn stderr "failed!"
+                 Nothing       -> return ()
                  Just Var {..} -> C.hPutStrLn h $
-                     toExponential 8 _deltaATtrue
-                     <> "  " <> showAT _AT0
+                     showAT _AT0
                      <> "  " <> toFixed 4 _mAT1
                      <> "  " <> toFixed 4 _mAT2
                      <> C.unwords (map (\m -> "  " <> toFixed 4 m) _mMAOS)
                      <> "  " <> toFixed 4 _mTtrue
                      <> "  " <> toFixed 4 _mT2
-                     <> "  " <> toFixed 4 _Qz
+                     <> "  " <> C.pack (show _correctPair)
 
 calcVar :: Double -> Double -> Double -> Event -> Maybe Var
 calcVar m0 m1 m2 ps = do
-    (pH, pBs, ptmiss) <- selectP ps
-    at <- mkAntler m0 m1 (visibles pBs)
-    let (qx, qy, qz) = pxpypz pH
+    (pH, pVs, ptmiss, pairp) <- selectP ps
+    at <- mkAntler m0 m1 (visibles pVs)
+    let (qx, qy) = pxpy pH
+        correctPair = if pairp then 1 else -1
         at0 = calcAT at qx qy 0 m2
 
     return $
         case mATMAOS at qx qy ptmiss of
-            Nothing -> Var { _deltaATtrue = deltaAT0 at pH
-                           , _AT0         = at0
+            Nothing -> Var { _AT0         = at0
                            , _mAT1        = MH._mAT1 at0
                            , _mAT2        = MH._mAT2 at0
                            , _mMAOS       = [0, 0, 0, 0]
-                           , _mTtrue      = 0
+                           , _mTtrue      = mTtrue at ptmiss
                            , _mT2         = 0
-                           , _Qz          = qz }
-            Just (mAT1, mAT2, mMAOS, mTtrue, mT2) ->
-                Var { _deltaATtrue = deltaAT0 at pH
-                    , _AT0         = at0
+                           , _correctPair = correctPair }
+            Just (mAT1, mAT2, mMAOS, mT2) ->
+                Var { _AT0         = at0
                     , _mAT1        = mAT1
                     , _mAT2        = mAT2
                     , _mMAOS       = mMAOS
-                    , _mTtrue      = mTtrue
+                    , _mTtrue      = mTtrue at ptmiss
                     , _mT2         = mT2
-                    , _Qz          = qz }
+                    , _correctPair = correctPair }
 
-selectP :: Event -> Maybe (FourMomentum, [FourMomentum], TransverseMomentum)
+selectP :: Event
+        -> Maybe (FourMomentum, [FourMomentum], TransverseMomentum, Bool)
 selectP ev = do
     let topChild = particlesFrom topQuarks (eventEntry ev)
     if null topChild
         then Nothing
         else do let pH = momentumSum $ fourMomentum <$> concat topChild
-                    pV = momentumSum . fmap fourMomentum <$>
-                        (filter (not . isNeutrino) <$> topChild)
+                    pBLs = fmap fourMomentum <$>
+                          (filter (not . isNeutrino) <$> topChild)
                     pNu = momentumSum (momentumSum . fmap fourMomentum <$>
-                          (filter isNeutrino <$> topChild))
+                                       (filter isNeutrino <$> topChild))
                     ptmiss = setXY (px pNu) (py pNu)
-                return (pH, pV, ptmiss)
+
+                pBLpairs <- correctPairs pBLs ptmiss 173.0 80.379 0 153.173
+
+                let pVs = momentumSum <$> pBLpairs
+                return (pH, pVs, ptmiss, pBLs == pBLpairs)
   where
     topQuarks = ParticleType [6]
     isNeutrino = (`elem` neutrinos) . idOf
-
-{-
-selectP :: Event -> Maybe (FourMomentum, [FourMomentum], TransverseMomentum)
-selectP ev = do
-    let [topChild, wChild] = flip particlesFrom (eventEntry ev) <$>
-                             [topQuarks, wBosons]
-    if null topChild
-        then Nothing
-        else do let pH  = momentumSum $ fourMomentum <$> concat topChild
-                    pBs = fourMomentum <$> concat (filter isBquark <$> topChild)
-                    pWW = momentumSum $ fourMomentum <$> concat wChild
-                    ptmiss = setXY (px pWW) (py pWW)
-                return (pH, pBs, ptmiss)
-  where
-    topQuarks = ParticleType [6]
-    wBosons   = ParticleType [24]
-    isBquark = (== 5) . abs . idOf
--}
 
 header :: ByteString
 header = BL.pack $ "# " <>
          foldl1 (\v1 v2 -> v1 <> ", " <> v2)
          (zipWith (\n v -> "(" <> show n <> ") " <> v) ([1..] :: [Int])
-             [ "deltaATtrue"
-             , "deltaAT(0)", "mATmin(0)", "mATmax(0)"
+             [ "deltaAT(0)", "mATmin(0)", "mATmax(0)"
              , "mATmin(maos)", "mATmax(maos)"
              , "mMAOS1", "mMAOS2", "mMAOS3", "mMAOS4"
-             , "mTtrue", "mT2", "Qz" ])
+             , "mTtrue", "mT2", "correct pair" ])
