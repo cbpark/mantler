@@ -13,6 +13,8 @@ stack.yaml.lock
 *.cmnd
 *.gz
 *.lhe
+*.lhco
 *.log
+*.sh
 bin
 data
