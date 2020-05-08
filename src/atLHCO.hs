@@ -98,12 +98,11 @@ takeDLEvent = forever $ do
         muons     = fourMomentum <$> muon
         leptons'  = take 2 $ sortBy ptCompare (electrons <> muons)
         jets'     = take 2 $ fourMomentum <$> bjet
-    yield $ if length leptons' < 2 || length jets' < 2
+    yield $ if length leptons' < 2 || length jets' < 2 || not (basicSelection' met)
             then Nothing
             else Just $ DLEvent { leptons = leptons'
                                 , jets    = jets'
                                 , ptmiss  = missingET ev }
-
 
 data Var = Var { _mAT01  :: !Double
                , _mAT02  :: !Double
