@@ -22,7 +22,7 @@ import           Pipes
 import           Pipes.ByteString                  (fromLazy)
 import qualified Pipes.Prelude                     as P
 --
-import           Control.Monad                     (forever, unless)
+import           Control.Monad                     (forever, unless, when)
 import           Data.List                         (sortBy)
 import           System.Environment                (getArgs)
 import           System.Exit                       (die)
@@ -60,9 +60,13 @@ main = do
                 putStrLn $ "-- ... Done!\n"
                     <> "-- " <> outfile <> " has been generated."
 
-basicSelection :: Monad m => Pipe Event Event m ()
+basicSelection :: MonadIO m => Pipe Event Event m ()
 basicSelection = forever $ do
   Event {..} <- await
+
+  when (nev `mod` 1000 == 0) $
+      liftIO $ putStrLn ("-- processed " ++ show nev ++ " events.")
+
   yield $ Event { nev      = nev
                 , photon   = filter basicSelection' photon
                 , electron = filter basicSelection' electron
