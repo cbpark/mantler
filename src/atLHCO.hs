@@ -43,7 +43,7 @@ main = do
 
     let writeOutput h =
             runEffect $ getLHCOEvent fromLazy events
-            >-> P.take 20
+            -- >-> P.take 20
             >-> basicSelection
             >-> takeDLEvent
             >-> P.map (calcVar 0 80.379 173)
