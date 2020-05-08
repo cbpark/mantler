@@ -65,3 +65,15 @@ executables:
       - pipes-bytestring
       - zlib
       - mantler
+
+  atLHCO:
+    main: atLHCO.hs
+    source-dirs: src
+    ghc-options: -threaded
+    dependencies:
+      - bytestring
+      - double-conversion
+      - pipes
+      - pipes-bytestring
+      - zlib
+      - mantler
