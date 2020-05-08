@@ -5,21 +5,19 @@ module MAT.Combinatorics (correctPairs) where
 import HEP.Kinematics
 import HEP.Kinematics.Variable (mT2Symm, maosMomentaSymmetric)
 
-import Data.Maybe              (catMaybes, isJust, isNothing)
+import Data.Maybe              (isJust, isNothing)
 
 -- import Debug.Trace
 
 newtype Pair a = Pair { pair :: (a, a) } deriving Show
 
-massP :: HasFourMomentum a => Pair a -> Double
-massP (Pair (p, q)) = invariantMass [p, q]
-
 testVar1 :: (Pair FourMomentum, Pair FourMomentum) -> Double -> Maybe Double
-testVar1 (pair1, pair2) m = let mPair = max (massP pair1) (massP pair2)
-                            in if mPair > m then Nothing else Just mPair
+testVar1 pairs m = if mPair > m then Nothing else Just mPair
+  where mPair = testVar1' pairs
 
 testVar1' :: (Pair FourMomentum, Pair FourMomentum) -> Double
 testVar1' (pair1, pair2) = max (massP pair1) (massP pair2)
+  where massP (Pair (p, q)) = invariantMass [p, q]
 
 testVar2 :: (Pair FourMomentum, Pair FourMomentum)
          -> TransverseMomentum
@@ -98,8 +96,10 @@ correctPairs [[p1, q1], [p2, q2]] ptmiss mT mW mNu mBLmax = do
     let pairs  = (Pair (p1, q1), Pair (p2, q2))
         pairs' = (Pair (p1, q2), Pair (p2, q1))
 
-        (t1 , t2 , t3 , t4 ) = testVars pairs  ptmiss mT mW mNu mBLmax
-        (t1', t2', t3', t4') = testVars pairs' ptmiss mT mW mNu mBLmax
+        -- (t1 , t2 , t3 , t4 ) = testVars pairs  ptmiss mT mW mNu mBLmax
+        -- (t1', t2', t3', t4') = testVars pairs' ptmiss mT mW mNu mBLmax
+        (t1 , t2 , _, _) = testVars pairs  ptmiss mT mW mNu mBLmax
+        (t1', t2', _, _) = testVars pairs' ptmiss mT mW mNu mBLmax
 
         [listPairs, listPairs'] = pairsToList <$> [pairs, pairs']
 
@@ -107,12 +107,9 @@ correctPairs [[p1, q1], [p2, q2]] ptmiss mT mW mNu mBLmax = do
        | isJust    t1 && isNothing t1' -> return listPairs
        | isNothing t2 && isJust    t2' -> return listPairs'
        | isJust    t2 && isNothing t2' -> return listPairs
+       {-
        | isNothing t4 && isJust    t4' -> return listPairs'
        | isJust    t4 && isNothing t4' -> return listPairs
-       -- | (isNothing t3  || isNothing t4)
-       --   && isJust t3' && isJust t4' -> return listPairs'
-       -- | (isNothing t3' || isNothing t4')
-       --   && isJust t3  && isJust t4  -> return listPairs
        | length (catMaybes [t2, t3, t4, t2', t3', t4']) == 6 ->
              do t2Val <- t2
                 t3Val <- t3
@@ -129,6 +126,7 @@ correctPairs [[p1, q1], [p2, q2]] ptmiss mT mW mNu mBLmax = do
                 return $ if deltaT2 + deltaT3 + deltaT4 > 0
                          then listPairs'
                          else listPairs
+       -}
        | otherwise -> return $ if testVar1' pairs > testVar1' pairs'
                                then listPairs'
                                else listPairs
