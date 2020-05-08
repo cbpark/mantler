@@ -1,4 +1,6 @@
+{-# LANGUAGE GADTs             #-}
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE RecordWildCards   #-}
 
 module Main where
 
@@ -20,7 +22,8 @@ import           Pipes
 import           Pipes.ByteString           (fromLazy)
 import qualified Pipes.Prelude              as P
 --
-import           Control.Monad              (unless)
+import           Control.Monad              (forever, unless)
+import           Data.List                  (sortBy)
 import           System.Environment         (getArgs)
 import           System.Exit                (die)
 import           System.IO
@@ -40,9 +43,11 @@ main = do
 
     let writeOutput h =
             runEffect $ getLHCOEvent fromLazy events
+            >-> P.take 20
+            >-> basicSelection
+            >-> takeDLEvent
             -- >-> P.map (calcVar 80.379 173.0 800)
             -- >-> P.map (calcVar 0 173.0 800)
-            >-> P.take 10
             -- >-> printVar h
             >-> P.print
 
@@ -56,6 +61,48 @@ main = do
 
                 putStrLn $ "-- ... Done!\n"
                     <> "-- " <> outfile <> " has been generated."
+
+basicSelection :: Monad m => Pipe Event Event m ()
+basicSelection = forever $ do
+  Event {..} <- await
+  let evFiltered = Event { nev      = nev
+                         , photon   = filter basicSelection' photon
+                         , electron = filter basicSelection' electron
+                         , muon     = filter basicSelection' muon
+                         , tau      = filter basicSelection' tau
+                         , jet      = filter basicSelection' jet
+                         , bjet     = filter basicSelection' bjet
+                         , met      = met }
+  yield evFiltered
+
+basicSelection' :: PhyObj a -> Bool
+basicSelection' ObjPhoton {}                           = False
+basicSelection' (ObjElectron (Track (eta', _, pt')) _) = abs eta' < 2.4 && pt' > 20
+basicSelection' (ObjMuon (Track (eta', _, pt')) _ _)   = abs eta' < 2.4 && pt' > 20
+basicSelection' ObjTau {}                              = False
+basicSelection' ObjJet {}                              = False
+basicSelection' (ObjBjet (Track (eta', _, pt')) _ _ _) = abs eta' < 2.4 && pt' > 20
+basicSelection' (ObjMet (_, pt'))                      = pt' > 40
+basicSelection' ObjUnknown                             = False
+
+data DLEvent = DLEvent { leptons :: [FourMomentum]
+                       , jets    :: [FourMomentum]
+                       , missing :: TransverseMomentum
+                       } deriving Show
+
+takeDLEvent :: Monad m => Pipe Event (Maybe DLEvent) m ()
+takeDLEvent = forever $ do
+    ev@Event {..} <- await
+    let electrons = fourMomentum <$> electron
+        muons     = fourMomentum <$> muon
+        leptons'  = sortBy ptCompare (electrons <> muons)
+        jets'     = fourMomentum <$> bjet
+    yield $ if length leptons' < 2 || length jets' < 2
+            then Nothing
+            else Just $ DLEvent { leptons = leptons'
+                                , jets    = jets'
+                                , missing = missingET ev }
+
 
 -- data Var = Var { _AT0         :: !AT
 --                , _mAT1        :: !Double
