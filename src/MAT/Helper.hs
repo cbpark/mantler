@@ -8,7 +8,7 @@ import HEP.Kinematics.Antler             (Antler, deltaAT, mAT)
 import Data.ByteString                   (ByteString)
 import Data.Double.Conversion.ByteString (toExponential, toFixed)
 
-data AT = AT { _deltaAT :: !Double  -- ^ Delta_{AT}
+data AT = AT { _deltaAT :: Double  -- ^ Delta_{AT}
              , _mAT1    :: !Double  -- ^ min(M_{AT})
              , _mAT2    :: !Double  -- ^ max(M_{AT})
              } deriving Show

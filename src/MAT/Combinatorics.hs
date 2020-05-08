@@ -1,11 +1,11 @@
-{-# LANGUAGE MultiWayIf   #-}
+{-# LANGUAGE MultiWayIf #-}
 
 module MAT.Combinatorics (correctPairs) where
 
 import HEP.Kinematics
-import HEP.Kinematics.Variable             (mT2Symm, maosMomentaSymmetric)
+import HEP.Kinematics.Variable (mT2Symm, maosMomentaSymmetric)
 
-import Data.Maybe                          (catMaybes, isJust, isNothing)
+import Data.Maybe              (catMaybes, isJust, isNothing)
 
 -- import Debug.Trace
 
