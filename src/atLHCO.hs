@@ -1,5 +1,6 @@
 {-# LANGUAGE BangPatterns      #-}
 {-# LANGUAGE GADTs             #-}
+{-# LANGUAGE MultiWayIf        #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE RecordWildCards   #-}
 
@@ -97,12 +98,14 @@ takeDLEvent = forever $ do
     let electrons = fourMomentum <$> electron
         muons     = fourMomentum <$> muon
         leptons'  = take 2 $ sortBy ptCompare (electrons <> muons)
+        mll       = invariantMass leptons'
         jets'     = take 2 $ fourMomentum <$> bjet
-    yield $ if length leptons' < 2 || length jets' < 2 || not (basicSelection' met)
-            then Nothing
-            else Just $ DLEvent { leptons = leptons'
-                                , jets    = jets'
-                                , ptmiss  = missingET ev }
+    yield $ if | length leptons' < 2 || length jets' < 2
+                 || not (basicSelection' met) -> Nothing
+               | mll > 76 && mll < 106        -> Nothing
+               | otherwise -> Just $ DLEvent { leptons = leptons'
+                                             , jets    = jets'
+                                             , ptmiss  = missingET ev }
 
 data Var = Var { _mAT01  :: !Double
                , _mAT02  :: !Double
@@ -167,8 +170,6 @@ selectP m0 m1' m1 DLEvent {..} =
     then Nothing
     else do let blPairs0 = tupleToList <$> zip leptons jets
                 !mMax = sqrt (m1 * m1 - m1' * m1')
-
-
             blPairs <- correctPairs blPairs0 ptmiss m1 m1' m0 mMax
             return $ momentumSum <$> blPairs
   where
