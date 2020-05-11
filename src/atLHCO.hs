@@ -83,7 +83,7 @@ basicSelection' (ObjElectron (Track (eta', _, pt')) _) = abs eta' < 2.4 && pt' >
 basicSelection' (ObjMuon (Track (eta', _, pt')) _ _)   = abs eta' < 2.4 && pt' > 20
 basicSelection' ObjTau {}                              = False
 basicSelection' ObjJet {}                              = False
-basicSelection' (ObjBjet (Track (eta', _, pt')) _ _ _) = abs eta' < 2.4 && pt' > 20
+basicSelection' (ObjBjet (Track (eta', _, pt')) _ _ _) = abs eta' < 2.4 && pt' > 30
 basicSelection' (ObjMet (_, pt'))                      = pt' > 40
 basicSelection' ObjUnknown                             = False
 
@@ -102,7 +102,9 @@ takeDLEvent = forever $ do
         jets'     = take 2 $ fourMomentum <$> bjet
     yield $ if | length leptons' < 2 || length jets' < 2
                  || not (basicSelection' met) -> Nothing
+               | pt (head leptons') < 30      -> Nothing
                | mll > 76 && mll < 106        -> Nothing
+               | mll < 20                     -> Nothing
                | otherwise -> Just $ DLEvent { leptons = leptons'
                                              , jets    = jets'
                                              , ptmiss  = missingET ev }
