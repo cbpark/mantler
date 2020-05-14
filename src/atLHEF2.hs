@@ -22,6 +22,7 @@ import           Pipes.ByteString                  (fromLazy)
 import qualified Pipes.Prelude                     as P
 --
 import           Control.Monad                     (forever, unless)
+import           Data.List                         (sort)
 import           System.Environment                (getArgs)
 import           System.Exit                       (die)
 import           System.IO
@@ -43,7 +44,7 @@ main = do
             runEffect $ getLHEFEvent fromLazy events
             -- >-> P.map (calcVar 80.379 173.0 800)
             >-> P.map (calcVar 0 173.0 800)
-            -- >-> P.take 20
+            -- >-> P.take 10
             >-> printVar h
 
     if lenArg == 1
@@ -59,8 +60,7 @@ main = do
                     <> "-- " <> outfile <> " has been generated."
 
 data Var = Var { _AT0         :: !AT
-               , _mAT1        :: !Double
-               , _mAT2        :: !Double
+               , _mATs        :: ![Double]
                , _mMAOS       :: ![Double]
                , _mTtrue      :: !Double
                , _mT2         :: !Double
@@ -74,8 +74,7 @@ printVar h = forever $ do
                  Nothing       -> return ()
                  Just Var {..} -> C.hPutStrLn h $
                      showAT _AT0
-                     <> "  " <> toFixed 4 _mAT1
-                     <> "  " <> toFixed 4 _mAT2
+                     <> C.unwords (map (\m -> "  " <> toFixed 4 m) _mATs)
                      <> C.unwords (map (\m -> "  " <> toFixed 4 m) _mMAOS)
                      <> "  " <> toFixed 4 _mTtrue
                      <> "  " <> toFixed 4 _mT2
@@ -92,17 +91,16 @@ calcVar m0 m1 m2 ps = do
     return $
         case mATMAOS at qx qy ptmiss of
             Nothing -> Var { _AT0         = at0
-                           , _mAT1        = MH._mAT1 at0
-                           , _mAT2        = MH._mAT2 at0
+                           , _mATs        = sort . concat . replicate 4 $
+                                            MH._mATs at0
                            , _mMAOS       = [0, 0, 0, 0]
                            , _mTtrue      = mTtrue at ptmiss
                            , _mT2         = 0
                            , _correctPair = correctPair }
-            Just (mAT1, mAT2, mMAOS, mT2) ->
+            Just (mATs, mMAOS, mT2) ->
                 Var { _AT0         = at0
-                    , _mAT1        = mAT1
-                    , _mAT2        = mAT2
-                    , _mMAOS       = mMAOS
+                    , _mATs        = mkLen 16 mATs
+                    , _mMAOS       = mkLen 4 mMAOS
                     , _mTtrue      = mTtrue at ptmiss
                     , _mT2         = mT2
                     , _correctPair = correctPair }
@@ -132,7 +130,10 @@ header :: ByteString
 header = BL.pack $ "# " <>
          foldl1 (\v1 v2 -> v1 <> ", " <> v2)
          (zipWith (\n v -> "(" <> show n <> ") " <> v) ([1..] :: [Int])
-             [ "deltaAT(0)", "mATmin(0)", "mATmax(0)"
-             , "mATmin(maos)", "mATmax(maos)"
+             [ "deltaAT(0)", "mAT01", "mAT02", "mAT03", "mAT04"
+             , "mAT11(maos)", "mAT12(maos)", "mAT13(maos)", "mAT14(maos)"
+             , "mAT21(maos)", "mAT22(maos)", "mAT23(maos)", "mAT24(maos)"
+             , "mAT31(maos)", "mAT32(maos)", "mAT33(maos)", "mAT34(maos)"
+             , "mAT41(maos)", "mAT42(maos)", "mAT43(maos)", "mAT44(maos)"
              , "mMAOS1", "mMAOS2", "mMAOS3", "mMAOS4"
              , "mTtrue", "mT2", "correct pair" ])

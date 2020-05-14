@@ -39,7 +39,7 @@ main = do
         runEffect $ getLHEFEvent fromLazy events
             -- >-> P.map (calcVar 80.379 173.0 800)
             >-> P.map (calcVar 0 173.0 800)
-            -- >-> P.take 3
+            -- >-> P.take 10
             >-> printVar h
 
     putStrLn $ "-- ... Done!\n" <> "-- " <> outfile <> " has been generated."
@@ -97,5 +97,5 @@ header :: ByteString
 header = BL.pack $ "# " <>
          foldl1 (\v1 v2 -> v1 <> ", " <> v2)
          (zipWith (\n v -> "(" <> show n <> ") " <> v) ([1..] :: [Int])
-             [ "deltaAT(0)",  "mAT(min, 0)",  "mAT(max, 0)"
-             , "deltaAT(true)", "mAT(min, true)", "mAT(max, true)" ])
+             [ "deltaAT(0)", "mAT01", "mAT02", "mAT03", "mAT04"
+             , "deltaAT(true)", "mATtrue1", "mATtrue2", "mATtrue3", "mATtrue4" ])

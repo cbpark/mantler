@@ -7,7 +7,7 @@
 module Main where
 
 import           MAT.Combinatorics                 (correctPairs)
-import           MAT.Helper                        as MH
+import           MAT.Helper
 
 import           HEP.Kinematics.Antler
 -- hep-utilities
@@ -24,7 +24,7 @@ import           Pipes.ByteString                  (fromLazy)
 import qualified Pipes.Prelude                     as P
 --
 import           Control.Monad                     (forever, unless, when)
-import           Data.List                         (sortBy)
+import           Data.List                         (sort, sortBy)
 import           System.Environment                (getArgs)
 import           System.Exit                       (die)
 import           System.IO
@@ -44,7 +44,7 @@ main = do
 
     let writeOutput h =
             runEffect $ getLHCOEvent fromLazy events
-            -- >-> P.take 20
+            -- >-> P.take 50
             >-> basicSelection
             >-> takeDLEvent
             >-> P.map (calcVar 0 80.379 173)
@@ -109,10 +109,8 @@ takeDLEvent = forever $ do
                                              , jets    = jets'
                                              , ptmiss  = missingET ev }
 
-data Var = Var { _mAT01  :: !Double
-               , _mAT02  :: !Double
-               , _mAT1   :: !Double
-               , _mAT2   :: !Double
+data Var = Var { _mAT0s  :: ![Double]
+               , _mATs   :: ![Double]
                , _mMAOS  :: ![Double]
                , _mTtrue :: !Double
                , _mT2    :: !Double
@@ -125,8 +123,9 @@ printVar h = forever $ do
     liftIO $ case vars of
                  Nothing       -> return ()
                  Just Var {..} -> C.hPutStrLn h $
-                     C.unwords (map (\m -> toFixed 4 m <> "  ")
-                                ([_mAT01, _mAT02, _mAT1, _mAT2] <> _mMAOS))
+                     C.unwords (map (\m -> toFixed 4 m <> "  ") _mAT0s)
+                     <> C.unwords (map (\m -> toFixed 4 m <> "  ") _mATs)
+                     <> C.unwords (map (\m -> toFixed 4 m <> "  ") _mMAOS)
                      <> toFixed 4 _mTtrue
                      <> "  " <> toFixed 4 _mT2
                      <> "  " <> toFixed 4 _met
@@ -142,28 +141,24 @@ calcVar m0 m1' m1 (Just ev@DLEvent {..}) = do
 
     let pVtot = momentumSum pVs
         (qx, qy) = pxpy pVtot
-        AT _ mAT01 mAT02 = calcAT at qx qy 0 0
+        AT _ mAT0s = calcAT at qx qy 0 0
 
         mTtrue' = mTtrue at ptmiss
         met = norm ptmiss
 
     return $ case mATMAOS at qx qy ptmiss of
-                 Nothing -> Var { _mAT01  = mAT01
-                                , _mAT02  = mAT02
-                                , _mAT1   = mAT01
-                                , _mAT2   = mAT02
+                 Nothing -> Var { _mAT0s  = mAT0s
+                                , _mATs   = sort . concat . replicate 4 $ mAT0s
                                 , _mMAOS  = [0, 0, 0, 0]
                                 , _mTtrue = mTtrue'
                                 , _mT2    = 0
                                 , _met    = met }
-                 Just (mAT1, mAT2, mMAOS, mT2) -> Var { _mAT01  = mAT01
-                                                      , _mAT02  = mAT02
-                                                      , _mAT1   = mAT1
-                                                      , _mAT2   = mAT2
-                                                      , _mMAOS  = mMAOS
-                                                      , _mTtrue = mTtrue'
-                                                      , _mT2    = mT2
-                                                      , _met    = met }
+                 Just (mATs, mMAOS, mT2) -> Var { _mAT0s  = mAT0s
+                                                , _mATs   = mkLen 16 mATs
+                                                , _mMAOS  = mkLen 4 mMAOS
+                                                , _mTtrue = mTtrue'
+                                                , _mT2    = mT2
+                                                , _met    = met }
 calcVar _ _ _ Nothing = Nothing
 
 selectP :: Double -> Double -> Double -> DLEvent -> Maybe [FourMomentum]
@@ -182,6 +177,10 @@ header :: ByteString
 header = BL.pack $ "# " <>
          foldl1 (\v1 v2 -> v1 <> ", " <> v2)
          (zipWith (\n v -> "(" <> show n <> ") " <> v) ([1..] :: [Int])
-             [ "mATmin(0)", "mATmax(0)", "mATmin(maos)", "mATmax(maos)"
+             [ "mAT01", "mAT02", "mAT03", "mAT04"
+             , "mAT11(maos)", "mAT12(maos)", "mAT13(maos)", "mAT14(maos)"
+             , "mAT21(maos)", "mAT22(maos)", "mAT23(maos)", "mAT24(maos)"
+             , "mAT31(maos)", "mAT32(maos)", "mAT33(maos)", "mAT34(maos)"
+             , "mAT41(maos)", "mAT42(maos)", "mAT43(maos)", "mAT44(maos)"
              , "mMAOS1", "mMAOS2", "mMAOS3", "mMAOS4"
              , "mTtrue", "mT2", "MET" ])

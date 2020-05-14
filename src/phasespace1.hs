@@ -103,4 +103,4 @@ header = BL.pack $ "# " <>
          foldl1 (\v1 v2 -> v1 <> ", " <> v2)
          (zipWith (\n v -> "(" <> show n <> ") " <> v) ([1..] :: [Int])
              [ "deltaAT(M2/2)", "deltaAT(2*M2)"
-             , "deltaAT(true)", "mAT(min)", "mAT(max)" ])
+             , "deltaAT(true)", "mAT1", "mAT2", "mAT3", "mAT4" ])

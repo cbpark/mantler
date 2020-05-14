@@ -10,7 +10,7 @@ import HEP.Kinematics.Variable              (mT2Symm, maosMomentaSymmetric)
 import HEP.Kinematics.Vector.LorentzTVector (setXYT)
 import HEP.Kinematics.Vector.LorentzVector  (setXYZT)
 
-import Data.List                            (nub)
+import Data.List                            (nub, sort)
 
 -- import Debug.Trace
 
@@ -102,7 +102,7 @@ deltaAT0 Antler {..} pRoot =
 
         m6  = Mat22 (Row2 a02 a03) (Row2 a12 a13)
         m6' = Mat22 (Row2 a20 a21) (Row2 a30 a31)
-    in (/ (_M1sq ** 4 + 1.0e-12)) $
+    in
        det m1 * det m1' - det m2 * det m2'
         + det m3 * det m3' + det m4 * det m4'
         - det m5 * det m5' + det m6 * det m6'
@@ -111,11 +111,11 @@ mAT :: Antler
     -> Double  -- ^ Q_{x}
     -> Double  -- ^ Q_{y}
     -> Double  -- ^ a guess of the longitudinal momentum of the resonance
-    -> Maybe (Double, Double)
+    -> Maybe [Double]
 mAT at@Antler{..} qx qy qz
     | _M1sq <= 0 = Nothing
     | otherwise  = do
-          let f = deltaAT at qx qy qz
+          let f = (/ (_M1sq ** 4 + 1.0e-12)) . deltaAT at qx qy qz
               m1 = sqrt _M1sq
 
           (_, sol) <- quarticEqSol f [m1, 10 * m1, 100 * m1, 1000 * m1] 1.0e-3
@@ -123,10 +123,8 @@ mAT at@Antler{..} qx qy qz
 
           if null sol
               then Nothing
-              else do let (eT1, eT2) = (,) <$> minimum <*> maximum $ sol
-                          pSq = qx * qx + qy * qy + qz * qz
-                      return ( sqrt0 $ eT1 * eT1 - pSq
-                             , sqrt0 $ eT2 * eT2 - pSq )
+              else do let pSq = qx * qx + qy * qy + qz * qz
+                      return $ fmap (\eT -> sqrt0 $ eT * eT - pSq) sol
     where
       sqrt0 x = if x < 0 then 1.0e+10 else sqrt x
 
@@ -134,10 +132,10 @@ mAT at@Antler{..} qx qy qz
 --
 -- m_{MAOS} is a 4-dim list.
 mATMAOS :: Antler
-        -> Double                                            -- ^ Q_{x}
-        -> Double                                            -- ^ Q_{y}
-        -> TransverseMomentum                                -- ^ MET
-        -> Maybe (Double, Double, [Double], Double)
+        -> Double              -- ^ Q_{x}
+        -> Double              -- ^ Q_{y}
+        -> TransverseMomentum  -- ^ MET
+        -> Maybe ([Double], [Double], Double)
 mATMAOS at@Antler{..} qx qy ptmiss = do
     let m0 = sqrt _M0sq
         m1 = sqrt _M1sq
@@ -147,27 +145,26 @@ mATMAOS at@Antler{..} qx qy ptmiss = do
         pVisSum = _v1 + _v2
         -- it may contain duplicates due to degenerate solutions
         qHs = nub $ (+ pVisSum) <$> zipWith (+) chi1s chi2s
-                 <> zipWith (+) chi1s (reverse chi2s)
+              <> zipWith (+) chi1s (reverse chi2s)
 
-    if null qHs                                 -- if no MAOS solutions
-        then do (mAT1, mAT2) <- mAT at qx qy 0  -- then set Qz = 0
-                return (mAT1, mAT2, [0, 0, 0, 0], mT2)
-        else do let qzSols = map pz qHs
-                mATs <- tuplesToList <$> mapM (mAT at qx qy) qzSols
-                let mAT1 = minimum mATs
-                    mAT2 = maximum mATs
-                    mMAOS = mkLen4 $ map mass qHs
-                return (mAT1, mAT2, mMAOS, mT2)
+    if null qHs                          -- if no MAOS solutions
+        then do mATs' <- mAT at qx qy 0  -- then set Qz = 0
+                -- We replicate here because there four possible MAOS solutions.
+                let mATs = (sort . concat . replicate 4) mATs'
+                return (mATs, [0], mT2)
+        else do let qzSols = fmap pz qHs
+                mATs' <- mapM (mAT at qx qy) qzSols
+                let mATs = (sort . concat) mATs'
+                    mMAOS = fmap mass qHs
+                return (mATs, mMAOS, mT2)
 
 mTtrue :: Antler -> TransverseMomentum -> Double
 mTtrue Antler {..} ptmiss =
     let pChiT = setXYT (px ptmiss) (py ptmiss) (norm ptmiss)
     in transverseMass [_v1, _v2] pChiT
 
+{-
 tuplesToList :: [(a, a)] -> [a]
 tuplesToList []            = []
 tuplesToList ((x0, x1):xs) = x0 : x1 : tuplesToList xs
-
-mkLen4 :: Num a => [a] -> [a]
-mkLen4 xs | length xs >= 4  = take 4 xs
-          | otherwise       = mkLen4 $! xs <> [0]
+-}

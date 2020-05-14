@@ -3,20 +3,19 @@
 
 module MAT.Helper where
 
-import HEP.Kinematics.Antler             (Antler, deltaAT, mAT)
+import           HEP.Kinematics.Antler             (Antler, deltaAT, mAT)
 
-import Data.ByteString                   (ByteString)
-import Data.Double.Conversion.ByteString (toExponential, toFixed)
+import           Data.ByteString                   (ByteString)
+import qualified Data.ByteString.Char8             as C
+import           Data.Double.Conversion.ByteString (toExponential, toFixed)
 
 data AT = AT { _deltaAT :: Double  -- ^ Delta_{AT}
-             , _mAT1    :: !Double  -- ^ min(M_{AT})
-             , _mAT2    :: !Double  -- ^ max(M_{AT})
+             , _mATs    :: [Double]
              } deriving Show
 
 showAT :: AT -> ByteString
 showAT AT {..} = toExponential 6 _deltaAT
-                 <> "  " <> toFixed 4 _mAT1
-                 <> "  " <> toFixed 4 _mAT2
+                 <> C.unwords (map (\m -> "  " <> toFixed 4 m) _mATs)
 
 calcAT :: Antler
        -> Double  -- ^ - p_{x} component of the ISR
@@ -27,7 +26,10 @@ calcAT :: Antler
 calcAT at qx qy qz e =
     let deltaATval = deltaAT at qx qy qz e
     in case mAT at qx qy qz of
-           Nothing           -> AT deltaATval 0 0
-           Just (mAT1, mAT2) -> AT { _deltaAT  = deltaATval
-                                   , _mAT1 = mAT1
-                                   , _mAT2 = mAT2 }
+           Nothing           -> AT deltaATval [0, 0, 0, 0]
+           Just mATs         -> AT { _deltaAT  = deltaATval
+                                   , _mATs = mkLen 4 mATs }
+
+mkLen :: Num a => Int -> [a] -> [a]
+mkLen n xs | length xs >= n  = take n xs
+           | otherwise       = mkLen n $! xs <> [0]
