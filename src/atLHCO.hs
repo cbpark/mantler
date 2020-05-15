@@ -44,7 +44,7 @@ main = do
 
     let writeOutput h =
             runEffect $ getLHCOEvent fromLazy events
-            -- >-> P.take 50
+            -- >-> P.take 10
             >-> basicSelection
             >-> takeDLEvent
             >-> P.map (calcVar 0 80.379 173)
@@ -82,7 +82,7 @@ basicSelection' ObjPhoton {}                           = False
 basicSelection' (ObjElectron (Track (eta', _, pt')) _) = abs eta' < 2.4 && pt' > 20
 basicSelection' (ObjMuon (Track (eta', _, pt')) _ _)   = abs eta' < 2.4 && pt' > 20
 basicSelection' ObjTau {}                              = False
-basicSelection' ObjJet {}                              = False
+basicSelection' (ObjJet (Track (eta', _, pt')) _ _ )   = abs eta' < 2.4 && pt' > 30
 basicSelection' (ObjBjet (Track (eta', _, pt')) _ _ _) = abs eta' < 2.4 && pt' > 30
 basicSelection' (ObjMet (_, pt'))                      = pt' > 40
 basicSelection' ObjUnknown                             = False
@@ -99,9 +99,12 @@ takeDLEvent = forever $ do
         muons     = fourMomentum <$> muon
         leptons'  = take 2 $ sortBy ptCompare (electrons <> muons)
         mll       = invariantMass leptons'
-        jets'     = take 2 $ fourMomentum <$> bjet
+        jets      = fourMomentum <$> jet
+        bjets     = fourMomentum <$> bjet
+        jets'     = take 2 $ bjets <> jets
     yield $ if | length leptons' < 2 || length jets' < 2
                  || not (basicSelection' met) -> Nothing
+               | null bjet                    -> Nothing
                | pt (head leptons') < 30      -> Nothing
                | mll > 76 && mll < 106        -> Nothing
                | mll < 20                     -> Nothing
