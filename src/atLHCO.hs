@@ -105,7 +105,7 @@ takeDLEvent = forever $ do
     yield $ if | length leptons' < 2 || length jets' < 2
                  || not (basicSelection' met) -> Nothing
                | null bjet                    -> Nothing
-               | pt (head leptons') < 30      -> Nothing
+               | pt (head leptons') < 25      -> Nothing
                | mll > 76 && mll < 106        -> Nothing
                | mll < 20                     -> Nothing
                | otherwise -> Just $ DLEvent { leptons = leptons'
