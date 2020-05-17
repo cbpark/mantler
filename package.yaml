@@ -9,6 +9,12 @@ category:     Physics
 
 ghc-options:  -Wall -Wcompat -O2 -funbox-strict-fields
 
+flags:
+  devel:
+    description: Create small test executables
+    manual:      True
+    default:     False
+
 dependencies:
   - base >= 4.12.0.0 && < 5
   - hmatrix-gsl
@@ -17,3 +23,15 @@ dependencies:
 library:
   exposed-modules: HEP.Kinematics.Antler
   source-dirs: lib
+
+executables:
+  mat0:
+    main: mat0.hs
+    source-dirs: examples
+    dependencies: [hep-utilities, mantler]
+    when:
+      - condition: flag(devel)
+        then:
+          buildable: True
+        else:
+          buildable: False

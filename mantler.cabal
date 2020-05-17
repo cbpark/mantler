@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 3950211b92e1c43ab42d56e757663047cbbfddff3a5c7d4c2b07955a1cdfff26
+-- hash: 6fd6e011ec49667aaf907ef401a3be4ceb21f225ac481547f006f96884baaf0d
 
 name:           mantler
 version:        0.0.0.0
@@ -22,6 +22,11 @@ source-repository head
   type: git
   location: https://github.com/cbpark/mantler
 
+flag devel
+  description: Create small test executables
+  manual: True
+  default: False
+
 library
   exposed-modules:
       HEP.Kinematics.Antler
@@ -37,4 +42,22 @@ library
       base >=4.12.0.0 && <5
     , hep-utilities
     , hmatrix-gsl
+  default-language: Haskell2010
+
+executable mat0
+  main-is: mat0.hs
+  other-modules:
+      Paths_mantler
+  hs-source-dirs:
+      examples
+  ghc-options: -Wall -Wcompat -O2 -funbox-strict-fields
+  build-depends:
+      base >=4.12.0.0 && <5
+    , hep-utilities
+    , hmatrix-gsl
+    , mantler
+  if flag(devel)
+    buildable: True
+  else
+    buildable: False
   default-language: Haskell2010

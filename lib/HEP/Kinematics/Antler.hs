@@ -1,18 +1,41 @@
 {-# LANGUAGE MultiWayIf      #-}
 {-# LANGUAGE RecordWildCards #-}
 
-module HEP.Kinematics.Antler where
+module HEP.Kinematics.Antler
+    (
+      getMAT
+
+    , Antler (..)
+    , mkAntler
+    , visibles
+
+    , deltaAT
+    , deltaAT0
+    , mAT
+    , mATMAOS
+    ) where
 
 import HEP.Util
 
 import HEP.Kinematics
-import HEP.Kinematics.Variable              (mT2Symm, maosMomentaSymmetric)
-import HEP.Kinematics.Vector.LorentzTVector (setXYT)
-import HEP.Kinematics.Vector.LorentzVector  (setXYZT)
+import HEP.Kinematics.Variable             (mT2Symm, maosMomentaSymmetric)
+import HEP.Kinematics.Vector.LorentzVector (setXYZT)
 
-import Data.List                            (nub, sort)
+import Data.List                           (nub, sort)
 
 -- import Debug.Trace
+
+getMAT :: FourMomentum  -- ^ the four-momentum of visible particles (1)
+       -> FourMomentum  -- ^ the four-momentum of visible particles (2)
+       -> Double        -- ^ Q_{x}
+       -> Double        -- ^ Q_{y}
+       -> Double        -- ^ a guess of the longitudinal momentum of the resonance
+       -> Double        -- ^ the mass of intermediate particle
+       -> Double        -- ^ the mass of invisible particle
+       -> Maybe [Double]
+getMAT p1 p2 qx qy qz mA mB = do
+    at <- mkAntler mB mA (Visibles p1 p2)
+    mAT at qx qy qz
 
 data Antler = Antler { _M0sq  :: !Double        -- ^ m_B^2
                      , _M1sq  :: !Double        -- ^ m_A^2
@@ -157,11 +180,6 @@ mATMAOS at@Antler{..} qx qy ptmiss = do
                 let mATs = (sort . concat) mATs'
                     mMAOS = fmap mass qHs
                 return (mATs, mMAOS, mT2)
-
-mTtrue :: Antler -> TransverseMomentum -> Double
-mTtrue Antler {..} ptmiss =
-    let pChiT = setXYT (px ptmiss) (py ptmiss) (norm ptmiss)
-    in transverseMass [_v1, _v2] pChiT
 
 {-
 tuplesToList :: [(a, a)] -> [a]
