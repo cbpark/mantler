@@ -2,7 +2,7 @@
 
 A coded implementation for reconstructing heavy resonances in the antler decay topology using the singularity variable.
 
-## Dependencies
+## How to build
 
 Internally, [GNU Scientific Library](https://www.gnu.org/software/gsl/) (GSL) is used to solve polynomial equations. In order to build this from source, make sure that `gsl-config` is in the `PATH`.
 
@@ -22,3 +22,5 @@ We recommend to use [`stack`](https://www.haskellstack.org) for building.
 ```
 $ stack build
 ```
+
+It may take some time to complete it in the first build, depending on the internet bandwidth and the machine specifications.
