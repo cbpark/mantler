@@ -4,10 +4,11 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: ef61436c7f55251fd6742c64ab06275dd678fc806286e2e2e26dd039943ccef8
+-- hash: 3950211b92e1c43ab42d56e757663047cbbfddff3a5c7d4c2b07955a1cdfff26
 
 name:           mantler
 version:        0.0.0.0
+synopsis:       Reconstructing heavy resonances in the antler decay topology using the singularity variable
 category:       Physics
 homepage:       https://github.com/cbpark/mantler#readme
 bug-reports:    https://github.com/cbpark/mantler/issues
@@ -36,104 +37,4 @@ library
       base >=4.12.0.0 && <5
     , hep-utilities
     , hmatrix-gsl
-  default-language: Haskell2010
-
-executable atLHCO
-  main-is: atLHCO.hs
-  other-modules:
-      MAT.Combinatorics
-      MAT.Helper
-      Paths_mantler
-  hs-source-dirs:
-      src
-  ghc-options: -Wall -Wcompat -O2 -funbox-strict-fields -threaded
-  build-depends:
-      base >=4.12.0.0 && <5
-    , bytestring
-    , double-conversion
-    , hep-utilities
-    , mantler
-    , pipes
-    , pipes-bytestring
-    , zlib
-  default-language: Haskell2010
-
-executable atLHEF1
-  main-is: atLHEF1.hs
-  other-modules:
-      MAT.Combinatorics
-      MAT.Helper
-      Paths_mantler
-  hs-source-dirs:
-      src
-  ghc-options: -Wall -Wcompat -O2 -funbox-strict-fields -threaded
-  build-depends:
-      base >=4.12.0.0 && <5
-    , bytestring
-    , double-conversion
-    , hep-utilities
-    , mantler
-    , pipes
-    , pipes-bytestring
-    , zlib
-  default-language: Haskell2010
-
-executable atLHEF2
-  main-is: atLHEF2.hs
-  other-modules:
-      MAT.Combinatorics
-      MAT.Helper
-      Paths_mantler
-  hs-source-dirs:
-      src
-  ghc-options: -Wall -Wcompat -O2 -funbox-strict-fields -threaded
-  build-depends:
-      base >=4.12.0.0 && <5
-    , bytestring
-    , double-conversion
-    , hep-utilities
-    , mantler
-    , pipes
-    , pipes-bytestring
-    , zlib
-  default-language: Haskell2010
-
-executable phasespace1
-  main-is: phasespace1.hs
-  other-modules:
-      MAT.Combinatorics
-      MAT.Helper
-      Paths_mantler
-  hs-source-dirs:
-      src
-  ghc-options: -Wall -Wcompat -O2 -funbox-strict-fields
-  build-depends:
-      base >=4.12.0.0 && <5
-    , bytestring
-    , double-conversion
-    , hep-utilities
-    , mantler
-    , pipes
-    , pipes-bytestring
-    , zlib
-  default-language: Haskell2010
-
-executable phasespace2
-  main-is: phasespace2.hs
-  other-modules:
-      MAT.Combinatorics
-      MAT.Helper
-      Paths_mantler
-  hs-source-dirs:
-      src
-  ghc-options: -Wall -Wcompat -O2 -funbox-strict-fields
-  build-depends:
-      base >=4.12.0.0 && <5
-    , bytestring
-    , double-conversion
-    , hep-utilities
-    , mantler
-    , pipes
-    , pipes-bytestring
-    , zlib
   default-language: Haskell2010

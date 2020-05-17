@@ -1,6 +1,6 @@
 name:         mantler
 version:      "0.0.0.0"
-# synopsis:
+synopsis:     Reconstructing heavy resonances in the antler decay topology using the singularity variable
 author:       Chan Beom Park
 maintainer:   cbpark@gmail.com
 license-file: LICENSE
@@ -11,69 +11,9 @@ ghc-options:  -Wall -Wcompat -O2 -funbox-strict-fields
 
 dependencies:
   - base >= 4.12.0.0 && < 5
+  - hmatrix-gsl
   - hep-utilities
 
 library:
-  exposed-modules:
-    - HEP.Kinematics.Antler
+  exposed-modules: HEP.Kinematics.Antler
   source-dirs: lib
-  dependencies: hmatrix-gsl
-
-executables:
-  phasespace1:
-    main: phasespace1.hs
-    source-dirs: src
-    dependencies:
-      - bytestring
-      - double-conversion
-      - pipes
-      - pipes-bytestring
-      - zlib
-      - mantler
-
-  phasespace2:
-    main: phasespace2.hs
-    source-dirs: src
-    dependencies:
-      - bytestring
-      - double-conversion
-      - pipes
-      - pipes-bytestring
-      - zlib
-      - mantler
-
-  atLHEF1:
-    main: atLHEF1.hs
-    source-dirs: src
-    ghc-options: -threaded
-    dependencies:
-      - bytestring
-      - double-conversion
-      - pipes
-      - pipes-bytestring
-      - zlib
-      - mantler
-
-  atLHEF2:
-    main: atLHEF2.hs
-    source-dirs: src
-    ghc-options: -threaded
-    dependencies:
-      - bytestring
-      - double-conversion
-      - pipes
-      - pipes-bytestring
-      - zlib
-      - mantler
-
-  atLHCO:
-    main: atLHCO.hs
-    source-dirs: src
-    ghc-options: -threaded
-    dependencies:
-      - bytestring
-      - double-conversion
-      - pipes
-      - pipes-bytestring
-      - zlib
-      - mantler
