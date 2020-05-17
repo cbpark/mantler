@@ -4,6 +4,7 @@
 module HEP.Kinematics.Antler
     (
       getMAT
+    , getMATMAOS
 
     , Antler (..)
     , mkAntler
@@ -25,6 +26,7 @@ import Data.List                           (nub, sort)
 
 -- import Debug.Trace
 
+-- | returns the list of M_{AT}.
 getMAT :: FourMomentum  -- ^ the four-momentum of visible particles (1)
        -> FourMomentum  -- ^ the four-momentum of visible particles (2)
        -> Double        -- ^ Q_{x}
@@ -36,6 +38,19 @@ getMAT :: FourMomentum  -- ^ the four-momentum of visible particles (1)
 getMAT p1 p2 qx qy qz mA mB = do
     at <- mkAntler mB mA (Visibles p1 p2)
     mAT at qx qy qz
+
+-- | returns (M_{AT}, M_{MAOS}, M_{T2}).
+getMATMAOS :: FourMomentum        -- ^ the four-momentum of visible particles (1)
+           -> FourMomentum        -- ^ the four-momentum of visible particles (2)
+           -> TransverseMomentum  -- ^ the missing transverse momentum
+           -> Double              -- ^ Q_{x}
+           -> Double              -- ^ Q_{y}
+           -> Double              -- ^ the mass of intermediate particle
+           -> Double              -- ^ the mass of invisible particle
+           -> Maybe ([Double], [Double], Double)
+getMATMAOS p1 p2 ptmiss qx qy mA mB = do
+    at <- mkAntler mB mA (Visibles p1 p2)
+    mATMAOS at qx qy ptmiss
 
 data Antler = Antler { _M0sq  :: !Double        -- ^ m_B^2
                      , _M1sq  :: !Double        -- ^ m_A^2
@@ -151,9 +166,6 @@ mAT at@Antler{..} qx qy qz
     where
       sqrt0 x = if x < 0 then 1.0e+10 else sqrt x
 
--- | returns (min(M_{AT}), max(M_{AT}), m_{MAOS}, MTtrue, MT2).
---
--- m_{MAOS} is a 4-dim list.
 mATMAOS :: Antler
         -> Double              -- ^ Q_{x}
         -> Double              -- ^ Q_{y}
