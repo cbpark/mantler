@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 6fd6e011ec49667aaf907ef401a3be4ceb21f225ac481547f006f96884baaf0d
+-- hash: 143d3cbfa8b2264662a53f012318d0d8bb20f889a551b266841f5d0256e1c038
 
 name:           mantler
 version:        0.0.0.0
@@ -36,7 +36,7 @@ library
       HEP.Util.Polynomial
       Paths_mantler
   hs-source-dirs:
-      lib
+      src
   ghc-options: -Wall -Wcompat -O2 -funbox-strict-fields
   build-depends:
       base >=4.12.0.0 && <5

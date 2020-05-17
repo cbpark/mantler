@@ -22,7 +22,7 @@ dependencies:
 
 library:
   exposed-modules: HEP.Kinematics.Antler
-  source-dirs: lib
+  source-dirs: src
 
 executables:
   mat0:
