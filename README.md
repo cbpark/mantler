@@ -24,3 +24,9 @@ $ stack build
 ```
 
 It may take some time to complete it in the first build, depending on the internet bandwidth and the machine specifications.
+
+## How to use
+
+See the [HEP.Kinematics.Antler](./src/HEP/Kinematics/Antler.hs) module and the example code, [mat.hs](./examples/mat.hs).
+
+For a real-world application, see [mat-analysis](https://github.com/cbpark/mat-analysis).

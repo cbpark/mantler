@@ -25,8 +25,8 @@ library:
   source-dirs: src
 
 executables:
-  mat0:
-    main: mat0.hs
+  mat:
+    main: mat.hs
     source-dirs: examples
     dependencies: [hep-utilities, mantler]
     when:
