@@ -47,10 +47,11 @@ getMATMAOS :: FourMomentum        -- ^ the four-momentum of visible particles (1
            -> Double              -- ^ Q_{y}
            -> Double              -- ^ the mass of intermediate particle
            -> Double              -- ^ the mass of invisible particle
-           -> Maybe ([Double], [Double], Double)
+           -> Maybe [Double]
 getMATMAOS p1 p2 ptmiss qx qy mA mB = do
     at <- mkAntler mB mA (Visibles p1 p2)
-    mATMAOS at qx qy ptmiss
+    (mATs, _, _) <- mATMAOS at qx qy ptmiss
+    return mATs
 
 data Antler = Antler { _M0sq  :: !Double        -- ^ m_B^2
                      , _M1sq  :: !Double        -- ^ m_A^2
