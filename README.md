@@ -2,6 +2,8 @@
 
 A coded implementation for reconstructing heavy resonances in the antler decay topology using the singularity variable.
 
+For C++ users, see [`MAT`](https://github.com/cbpark/MAT/).
+
 ## How to build
 
 Internally, [GNU Scientific Library](https://www.gnu.org/software/gsl/) (GSL) is used to solve polynomial equations. In order to build this from source, make sure that `gsl-config` is in the `PATH`.
