@@ -1,6 +1,6 @@
 # mantler
 
-A coded implementation for reconstructing heavy resonances in the antler decay topology using the singularity variable.
+A coded implementation for reconstructing heavy resonances in the antler decay topology using the singularity variable. It has been used in [arXiv:2005.12297](https://arxiv.org/abs/2005.12297).
 
 For C++ users, see [`MAT`](https://github.com/cbpark/MAT/).
 
@@ -32,3 +32,20 @@ It may take some time to complete it in the first build, depending on the intern
 See the [HEP.Kinematics.Antler](./src/HEP/Kinematics/Antler.hs) module and the example code, [mat.hs](./examples/mat.hs).
 
 For a real-world application, see [mat-analysis](https://github.com/cbpark/mat-analysis).
+
+## Reference
+
+If you use this library, please cite the paper given below.
+
+```
+@article{Park:2020rol,
+    author = "Park, Chan Beom",
+    title = "{A singular way to search for heavy resonances in missing energy events}",
+    eprint = "2005.12297",
+    archivePrefix = "arXiv",
+    primaryClass = "hep-ph",
+    reportNumber = "CTPU-PTC-20-14",
+    month = "5",
+    year = "2020"
+}
+```
