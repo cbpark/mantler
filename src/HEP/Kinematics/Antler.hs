@@ -1,4 +1,3 @@
-{-# LANGUAGE MultiWayIf      #-}
 {-# LANGUAGE RecordWildCards #-}
 
 module HEP.Kinematics.Antler
