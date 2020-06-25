@@ -37,7 +37,7 @@ For a real-world application, see [mat-analysis](https://github.com/cbpark/mat-a
 
 If you use this library, please cite the paper given below.
 
-```
+``` bibtex
 @article{Park:2020rol,
     author = "Park, Chan Beom",
     title = "{A singular way to search for heavy resonances in missing energy events}",
