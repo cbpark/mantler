@@ -10,7 +10,7 @@ addons:
   apt:
     packages:
       - libgsl-dev
-      - lapack
+      - liblapack-dev
 
 before_install:
   - mkdir -p ~/.local/bin
