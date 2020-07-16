@@ -1,4 +1,5 @@
-# mantler
+mantler
+=======
 
 A coded implementation for reconstructing heavy resonances in the antler decay topology using the singularity variable. It has been used in [arXiv:2005.12297](https://arxiv.org/abs/2005.12297).
 
@@ -19,13 +20,23 @@ In Arch Linux, it can be installed by
 $ sudo pacman -S gsl lapack
 ```
 
+In Debian and Ubuntu,
+
+```
+$ sudo apt-get install libgsl-dev liblapack-dev
+```
+
 We recommend to use [`stack`](https://www.haskellstack.org) for building.
 
 ```
 $ stack build
 ```
 
-It may take some time to complete it in the first build, depending on the internet bandwidth and the machine specifications.
+It may take some time to complete building in the first run, depending on the internet bandwidth and the machine specifications. If cloning [`hep-utilities`](https://github.com/cbpark/hep-utilities) fails, modify [`stack.yaml`](./stack.yaml):
+
+```
+sed -i 's/git@github.com:/https:\/\/github.com\//' stack.yaml
+```
 
 ## How to use
 
