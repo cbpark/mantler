@@ -8,7 +8,9 @@ cache:
 
 addons:
   apt:
-    packages: libgsl-dev
+    packages:
+      - libgsl-dev
+      - lapack
 
 before_install:
   - mkdir -p ~/.local/bin
@@ -17,7 +19,7 @@ before_install:
   - sed -i 's/git@github.com:/https:\/\/github.com\//' stack.yaml
 
 install:
-  - stack -j 2 build --dependencies-only --no-terminal
+  - stack -j 2 build --only-snapshot --no-terminal
 
 script:
   - stack -j 2 build --no-terminal --fast --flag mantler:devel
