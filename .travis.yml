@@ -3,7 +3,8 @@ language: generic
 sudo: false
 cache:
   directories:
-    - $HOME/.stack
+    - "$HOME/.stack"
+    - "$TRAVIS_BUILD_DIR/.stack-work"
 
 addons:
   apt:
@@ -16,8 +17,7 @@ before_install:
   - sed -i 's/git@github.com:/https:\/\/github.com\//' stack.yaml
 
 install:
-  - stack -j 2 setup --no-terminal
-  - stack -j 2 build --only-snapshot --no-terminal
+  - stack -j 2 build -only-dependencies --no-terminal
 
 script:
   - stack -j 2 build --no-terminal --fast --flag mantler:devel
