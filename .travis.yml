@@ -1,4 +1,4 @@
-language: haskell
+language: generic
 
 sudo: false
 cache:
@@ -14,5 +14,9 @@ before_install:
   - export PATH=$HOME/.local/bin:$PATH
   - travis_retry curl -L https://get.haskellstack.org/stable/linux-x86_64.tar.gz | tar xz --wildcards --strip-components=1 -C ~/.local/bin '*/stack'
 
+install:
+  - stack -j 2 setup --no-terminal
+  - stack -j 2 build --only-snapshot --no-terminal
+
 script:
-  - stack build --no-terminal --skip-ghc-check --fast --flag mantler:devel
+  - stack -j 2 build --no-terminal --fast --flag mantler:devel
