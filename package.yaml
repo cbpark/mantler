@@ -1,5 +1,5 @@
 name:         mantler
-version:      "0.1.0.0"
+version:      "0.1.1.0"
 synopsis:     Reconstructing heavy resonances in the antler decay topology using the singularity variable
 author:       Chan Beom Park
 maintainer:   cbpark@gmail.com

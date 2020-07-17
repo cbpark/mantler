@@ -4,10 +4,10 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 6b76a43cd6ad6de9b7aa84bb994b92c6367a0ec8e322eae8cab5abce1782e8ef
+-- hash: 57311fe36a83bdd0cfca2f012a13dc941bc6ddaedf71602cf54869c9c4b07ac3
 
 name:           mantler
-version:        0.1.0.0
+version:        0.1.1.0
 synopsis:       Reconstructing heavy resonances in the antler decay topology using the singularity variable
 category:       Physics
 homepage:       https://github.com/cbpark/mantler#readme
