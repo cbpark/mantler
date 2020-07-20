@@ -1,6 +1,7 @@
 mantler
 =======
 
+[![License](https://img.shields.io/badge/License-BSD%203--Clause-blue.svg)](https://opensource.org/licenses/BSD-3-Clause)
 [![Build Status](https://travis-ci.com/cbpark/mantler.svg?branch=master)](https://travis-ci.com/cbpark/mantler)
 
 A coded implementation for reconstructing heavy resonances in the antler decay topology using the singularity variable. It has been used in [arXiv:2005.12297](https://arxiv.org/abs/2005.12297).
