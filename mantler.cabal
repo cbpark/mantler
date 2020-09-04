@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 57311fe36a83bdd0cfca2f012a13dc941bc6ddaedf71602cf54869c9c4b07ac3
+-- hash: 5227495636bec800a52702bae93d6bd378f374ba8f3f45f14ce03d113938c871
 
 name:           mantler
 version:        0.1.1.0
@@ -37,7 +37,7 @@ library
       Paths_mantler
   hs-source-dirs:
       src
-  ghc-options: -Wall -Wcompat -O2 -funbox-strict-fields
+  ghc-options: -Wall -Wcompat -O2 -funbox-strict-fields -fwrite-ide-info -hiedir=.hie
   build-depends:
       base >=4.12.0.0 && <5
     , hep-utilities
@@ -50,7 +50,7 @@ executable mat
       Paths_mantler
   hs-source-dirs:
       examples
-  ghc-options: -Wall -Wcompat -O2 -funbox-strict-fields
+  ghc-options: -Wall -Wcompat -O2 -funbox-strict-fields -fwrite-ide-info -hiedir=.hie
   build-depends:
       base >=4.12.0.0 && <5
     , hep-utilities

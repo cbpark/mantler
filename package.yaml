@@ -8,6 +8,7 @@ github:       cbpark/mantler
 category:     Physics
 
 ghc-options:  -Wall -Wcompat -O2 -funbox-strict-fields
+              -fwrite-ide-info -hiedir=.hie
 
 flags:
   devel:
