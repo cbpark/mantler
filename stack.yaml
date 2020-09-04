@@ -6,4 +6,4 @@ packages:
 extra-deps:
 # - ../hep-utilities
 - git: git@github.com:cbpark/hep-utilities.git
-  commit: def38866ee5f7f47d471c83f6fe38dcaa6fe4560
+  commit: 1e84115ecf320af9d1352cfaf0d5225601ea4139
